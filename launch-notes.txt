@@ -1,0 +1,13 @@
+# Launch ROS package
+ros2 launch odrive_can example_launch.yaml
+
+# Set to CLOSED_LOOP_CONTROL
+ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 8}"
+
+# Set to IDLE
+ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 1}"
+
+# Start up can0 ifconfig interface
+sudo ip link set can0 up type can bitrate 1000000
+
+# Watchdog timer is fed via publishing to the control_message topic.
