@@ -1,4 +1,4 @@
-# Odrive S1 config. For the neos v1.1 motors. Firmware 0.6.7
+# Odrive S1 config. For the neos v1.1 motors. Firmware 0.6.8
 
 odrv = odrv0
 odrv.config.dc_bus_overvoltage_trip_level = 54
@@ -34,7 +34,7 @@ odrv.axis0.config.commutation_encoder = EncoderId.HALL_ENCODER0
 
 # Add can bus functionality
 odrv.config.enable_can_a = True
-odrv.axis0.config.can.node_id = 1
+odrv.axis0.config.can.node_id = 0
 odrv.can.config.baud_rate = 1000000
 
 # Enable cyclical data to reach over CAN

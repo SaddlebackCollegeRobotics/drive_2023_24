@@ -55,7 +55,7 @@ class MinimalPublisher(Node):
 
         right_msg.control_mode = ControlMode.VELOCITY_CONTROL
         right_msg.input_mode = InputMode.PASSTHROUGH
-        right_msg.input_vel = float(-rs_y * self.max_speed)
+        right_msg.input_vel = float(rs_y * self.max_speed)
 
         # Publish the message.
 
