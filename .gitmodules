@@ -2,3 +2,4 @@
 	path = src/odrive_can
 	url = https://github.com/SaddlebackCollegeRobotics/odrive_can
 	branch = main
+	update = merge
