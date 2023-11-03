@@ -81,9 +81,7 @@ class MinimalPublisher(Node):
             (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.gamepad_deadzone)
             (_, rs_y) = gamepad_input.getRightStick(gamepad, self.gamepad_deadzone)
 
-            ls_y = -ls_y
-
-            self.motor_controllers[0].set_normalized_velocity(ls_y)
+            self.motor_controllers[0].set_normalized_velocity(-ls_y)
             self.motor_controllers[1].set_normalized_velocity(ls_y)
 
             self.motor_controllers[2].set_normalized_velocity(rs_y)
