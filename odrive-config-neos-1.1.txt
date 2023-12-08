@@ -15,17 +15,34 @@ odrv.axis0.config.motor.resistance_calib_max_voltage = 2
 odrv.axis0.config.calibration_lockin.current = 10
 odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
 odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
-odrv.axis0.controller.config.vel_ramp_rate = 1
+#odrv.axis0.controller.config.vel_ramp_rate = 1
+odrv.axis0.controller.config.vel_ramp_rate = 0.8
 odrv.axis0.controller.config.vel_limit = 100
 odrv.axis0.controller.config.vel_limit_tolerance = 1.2
 
-odrv.axis0.config.torque_soft_min = -0.07214830970556162
-odrv.axis0.config.torque_soft_max = 0.07214830970556162
+# Brake Resistor
+odrv0.config.brake_resistor0.enable = True
+odrv0.config.brake_resistor0.resistance = 2
+
+# Previous
+#odrv.axis0.config.torque_soft_min = -0.07214830970556162
+#odrv.axis0.config.torque_soft_max = 0.07214830970556162
+
+odrv.axis0.config.torque_soft_min = -0.25
+odrv.axis0.config.torque_soft_max = 0.25
+
 odrv.axis0.config.enable_watchdog = True
 odrv.axis0.config.watchdog_timeout = 2
 
-odrv.axis0.controller.config.vel_gain = 0.05
-odrv.axis0.controller.config.vel_integrator_gain = 0
+# PID Loop
+# vel_integrator_gain = 0.5 * encoder_bandwidth?? * vel_gain
+odrv.axis0.controller.config.vel_gain = 0.08
+odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
+
+# TODO REMOVE
+# odrv0.axis0.controller.config.vel_gain = 0.08
+# odrv0.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * 0.08
+# odrv0.save_configuration()
 
 odrv.axis0.config.encoder_bandwidth = 100
 odrv.hall_encoder0.config.enabled = True

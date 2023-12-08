@@ -1,5 +1,5 @@
 # Launch ROS package
-ros2 launch odrive_can example_launch.yaml
+ros2 launch odrive_can rover_drive_launch.yaml
 
 # Set to CLOSED_LOOP_CONTROL
 ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 8}"
@@ -11,3 +11,13 @@ ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{ax
 sudo ip link set can0 up type can bitrate 1000000
 
 # Watchdog timer is fed via publishing to the control_message topic.
+
+# Linux systemd service for drive system
+# rover-drive.service - runs on rover
+# service resides in /etc/systemd/system/
+# To copy a new service file:
+sudo cp rover-drive.service /etc/systemd/system/
+
+# Start, stop, status, run on startup, of service:
+# Enable and disable is for allowing the service to start on device boot.
+sudo systemctl [start|stop|status|enable|disable] rover-drive.service

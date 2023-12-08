@@ -1,41 +1,13 @@
 import rclpy
 from rclpy.node import Node
+from .motor_controller import MotorController
 
-from odrive_can.msg import ControlMessage
-from odrive.enums import InputMode
-from odrive.enums import ControlMode
+import ifcfg
+
 from . import gamepad_input
 import os
-from numpy import clip
+import subprocess
 
-
-class MotorController():
-    
-    def __init__(self, node: Node, topic_name: str, max_speed: float):
-        self._axis_publisher = node.create_publisher(ControlMessage, topic_name, 10)
-
-        self._control_msg = ControlMessage()
-        self._control_msg.control_mode = ControlMode.VELOCITY_CONTROL
-        self._control_msg.input_mode = InputMode.PASSTHROUGH
-        self._control_msg.input_vel = 0.0
-
-        self._max_speed = max_speed
-
-    def set_velocity(self, vel: float):
-        self._control_msg.input_vel = float(clip(vel, -self._max_speed, self._max_speed))
-        self._axis_publisher.publish(self._control_msg)
-
-    def set_normalized_velocity(self, normalized_analog_input: float):
-        self.set_velocity(normalized_analog_input * self._max_speed)
-
-    def set_max_speed(self, max_speed: float):
-        self._max_speed = abs(max_speed)
-
-    def change_max_speed(self, delta: float):
-        new_speed = self._max_speed + delta
-        self.set_max_speed(0 if new_speed < 0 else new_speed)
-
-        
 
 class MinimalPublisher(Node):
 
@@ -44,12 +16,60 @@ class MinimalPublisher(Node):
         # Give the node a name.
         super().__init__('minimal_publisher')
 
-        # Create a timer that will call the 'timer_callback' function every timer_period second.
+        # Check for CAN bus connection
+        self.configure_can_bus()
+        
+        # Set up motor controller publishers ---------------------------------------
+
+        INITIAL_MAX_SPEED = 30
+
+        self.motor_controllers = [
+            MotorController(self, '/odrive_axis0/control_message', '/odrive_axis0/request_axis_state', INITIAL_MAX_SPEED),
+            MotorController(self, '/odrive_axis1/control_message', '/odrive_axis1/request_axis_state', INITIAL_MAX_SPEED),
+            MotorController(self, '/odrive_axis2/control_message', '/odrive_axis2/request_axis_state', INITIAL_MAX_SPEED),
+            MotorController(self, '/odrive_axis3/control_message', '/odrive_axis3/request_axis_state', INITIAL_MAX_SPEED)
+        ]
+
+        # --------------------------------------------------------------------------
+
+        # Set up gamepad input
+        self.configure_gamepad_input()
+
         timer_period = 1/10  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        # Set up gamepad input --------------------------------------------------------
+        
+    def timer_callback(self):
+        
+        gamepad = gamepad_input.getGamepad(0)
 
+        if gamepad != None:
+            (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.gamepad_deadzone)
+            (_, rs_y) = gamepad_input.getRightStick(gamepad, self.gamepad_deadzone)
+            (_, r2) = gamepad_input.getTriggers(gamepad, self.gamepad_deadzone)
+
+            if r2 > 0:
+                rs_y = ls_y
+
+            self.motor_controllers[0].set_normalized_velocity(-ls_y)
+            self.motor_controllers[1].set_normalized_velocity(ls_y)
+            self.motor_controllers[2].set_normalized_velocity(rs_y)
+            self.motor_controllers[3].set_normalized_velocity(rs_y)
+        else:
+            for motor_controller in self.motor_controllers:
+                motor_controller.set_velocity(0)
+
+        print("Max Speed: " + str(self.motor_controllers[0]._max_speed))
+
+    def hatNorth(self):
+        for motor_controller in self.motor_controllers:
+            motor_controller.change_max_speed(5)
+    
+    def hatSouth(self):
+        for motor_controller in self.motor_controllers:
+            motor_controller.change_max_speed(-5)
+
+    def configure_gamepad_input(self):
         self.gamepad_deadzone = 0.1
 
         # TODO use ros getshare path function instead of doing this
@@ -61,45 +81,23 @@ class MinimalPublisher(Node):
         hatEvents = [self.hatNorth, self.hatSouth, None, None, None]
         gamepad_input.run_event_loop(hatEvents=hatEvents)
 
-        # Set up motor controller publishers ------------------------------------------
+    def configure_can_bus(self):
 
-        INITIAL_MAX_SPEED = 30
+        found = False
+        for name, interface in ifcfg.interfaces().items():
+            if name == 'can0':
+                found = True
+                self.get_logger().info("CAN bus found")
+                break  
 
-        self.motor_controllers = [
-            MotorController(self, '/odrive_axis0/control_message', INITIAL_MAX_SPEED),
-            MotorController(self, '/odrive_axis1/control_message', INITIAL_MAX_SPEED),
-            MotorController(self, '/odrive_axis2/control_message', INITIAL_MAX_SPEED),
-            MotorController(self, '/odrive_axis3/control_message', INITIAL_MAX_SPEED)
-        ]
+        if not found:  
+            self.get_logger().info("CAN bus not found")
+            exit(0)
 
-        
-    def timer_callback(self):
-        
-        gamepad = gamepad_input.getGamepad(0)
-
-        if gamepad != None:
-            (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.gamepad_deadzone)
-            (_, rs_y) = gamepad_input.getRightStick(gamepad, self.gamepad_deadzone)
-
-            self.motor_controllers[0].set_normalized_velocity(-ls_y)
-            self.motor_controllers[1].set_normalized_velocity(ls_y)
-
-            self.motor_controllers[2].set_normalized_velocity(rs_y)
-            self.motor_controllers[3].set_normalized_velocity(rs_y)
-        else:
-            for motor_controller in self.motor_controllers:
-                motor_controller.set_velocity(0)
-
-        print("Max Speed: " + str(self.motor_controllers[0]._max_speed))
-
-
-    def hatNorth(self):
-        for motor_controller in self.motor_controllers:
-            motor_controller.change_max_speed(5)
-    
-    def hatSouth(self):
-        for motor_controller in self.motor_controllers:
-            motor_controller.change_max_speed(-5)
+        # may need sudo?????
+        # use subprocess????
+        # os.system("sudo ip link set can0 up type can bitrate 1000000")
+        subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
 
 
 def main(args=None):
@@ -110,8 +108,6 @@ def main(args=None):
     rclpy.spin(minimal_publisher)
 
     # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     minimal_publisher.destroy_node()
     rclpy.shutdown()
 
