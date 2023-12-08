@@ -21,3 +21,9 @@ sudo cp rover-drive.service /etc/systemd/system/
 # Start, stop, status, run on startup, of service:
 # Enable and disable is for allowing the service to start on device boot.
 sudo systemctl [start|stop|status|enable|disable] rover-drive.service
+
+# Extremely jank docker image commands, find more info here:
+# https://github.com/dusty-nv/jetson-containers/blob/master/docs/run.md
+cd /home/orin/jetson-containers
+./run.sh --volume /home/orin/workspaces/drive_2023_24:/drive_2023_24  $(./autotag ros)
+# Then, the drive code may be found in the container at /drive_2023_24, where it may be run as normal
