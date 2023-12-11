@@ -1,12 +1,12 @@
-import rclpy
 from rclpy.node import Node
 
 from odrive_can.msg import ControlMessage
-from odrive_can.srv import AxisState
 
 from odrive.enums import InputMode
 from odrive.enums import ControlMode
 from numpy import clip
+from threading import Thread
+import subprocess
 
 
 class MotorController():
@@ -21,17 +21,8 @@ class MotorController():
 
         self._max_speed = max_speed
 
-        self.cli = node.create_client(AxisState, service_name)
-
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-            node.get_logger().info(f'{service_name} service not available, waiting again...')
-
-        self.req = AxisState.Request()
-        response = self.request_state(8) # Set to closed loop
-   
-        node.get_logger().info(
-            f"Motor state: {response.axis_state} | Result: {response.procedure_result}")
-
+        thread = Thread(target=self.enter_closed_loop, args=(service_name,))
+        thread.start()
 
     def set_velocity(self, vel: float):
         self._control_msg.input_vel = float(clip(vel, -self._max_speed, self._max_speed))
@@ -47,8 +38,5 @@ class MotorController():
         new_speed = self._max_speed + delta
         self.set_max_speed(0 if new_speed < 0 else new_speed)
 
-    def request_state(self, requested_state):
-        self.req.axis_requested_state = requested_state
-        self.future = self.cli.call_async(self.req)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+    def enter_closed_loop(self, service_name: str):
+        subprocess.run(["ros2", "service", "call", service_name, "odrive_can/srv/AxisState", "{axis_requested_state: 8}"])

@@ -72,7 +72,7 @@ class MinimalPublisher(Node):
     def configure_gamepad_input(self):
         self.gamepad_deadzone = 0.1
 
-        # TODO use ros getshare path function instead of doing this
+        # TODO use ros get share path function instead of doing this
         config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                     '../../../../share/py_pubsub/gamepads.config')
 
@@ -94,9 +94,6 @@ class MinimalPublisher(Node):
             self.get_logger().info("CAN bus not found")
             exit(0)
 
-        # may need sudo?????
-        # use subprocess????
-        # os.system("sudo ip link set can0 up type can bitrate 1000000")
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
 
 
