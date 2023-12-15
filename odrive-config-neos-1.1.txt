@@ -13,12 +13,16 @@ odrv.axis0.config.motor.current_hard_max = 60
 odrv.axis0.config.motor.calibration_current = 10
 odrv.axis0.config.motor.resistance_calib_max_voltage = 2
 odrv.axis0.config.calibration_lockin.current = 10
+
 odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
 odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
-#odrv.axis0.controller.config.vel_ramp_rate = 1
-odrv.axis0.controller.config.vel_ramp_rate = 0.8
+odrv.axis0.controller.config.vel_ramp_rate = 150
 odrv.axis0.controller.config.vel_limit = 100
-odrv.axis0.controller.config.vel_limit_tolerance = 1.2
+odrv.axis0.controller.config.vel_limit_tolerance = 1.2  
+
+# Disable spinout detection
+odrv.axis0.controller.config.spinout_electrical_power_threshold = 9999
+odrv.axis0.controller.config.spinout_mechanical_power_threshold = -9999
 
 # Brake Resistor
 odrv0.config.brake_resistor0.enable = True

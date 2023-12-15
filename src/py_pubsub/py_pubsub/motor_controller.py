@@ -9,20 +9,70 @@ from threading import Thread
 import subprocess
 
 
+class MotorControllerManager():
+
+    def __init__(self, node: Node):
+
+        self._node: Node = node
+
+        # Key: node id, Value: MotorController
+        self._motor_controllers: dict[int, MotorController] = {}
+
+    def add_motor_controller(self, node_id: int, max_speed: float):
+        if node_id not in self._motor_controllers:
+            self._motor_controllers[node_id] = MotorController(self._node, node_id, max_speed)
+        else:
+            print("Motor controller with node id " + str(node_id) + " already exists.")
+    
+    # Set velocity ------------------------------------------------------
+    
+    def set_velocity(self, node_id: int, vel: float):
+        self._motor_controllers[node_id].set_velocity(vel)
+
+    def set_velocity_all(self, vel: float):
+        for motor_controller in self._motor_controllers.values():
+            motor_controller.set_velocity(vel)
+    
+    def set_normalized_velocity(self, node_id: int, normalized_analog_input: float):
+        self._motor_controllers[node_id].set_normalized_velocity(normalized_analog_input)
+
+    # Set max speed -----------------------------------------------------
+
+    def set_max_speed(self, node_id: int, max_speed: float):
+        self._motor_controllers[node_id].set_max_speed(max_speed)
+
+    def change_max_speed(self, node_id: int, delta: float):
+        self._motor_controllers[node_id].change_max_speed(delta)
+
+    def change_max_speed_all(self, delta: float):
+        for motor_controller in self._motor_controllers.values():
+            motor_controller.change_max_speed(delta)
+
+    # Enter closed loop -------------------------------------------------
+
+    def enter_closed_loop(self, node_id: int):
+        self._motor_controllers[node_id].enter_closed_loop()
+
+    def enter_closed_loop_all(self):
+        for motor_controller in self._motor_controllers.values():
+            motor_controller.enter_closed_loop()
+
+
 class MotorController():
     
-    def __init__(self, node: Node, topic_name: str, service_name: str, max_speed: float):
-        self._axis_publisher = node.create_publisher(ControlMessage, topic_name, 10)
+    def __init__(self, node: Node, node_id: int, max_speed: float):
+
+        self._service_name = "/odrive_axis" + str(node_id) + "/request_axis_state"
+        self._topic_name = "/odrive_axis" + str(node_id) + "/control_message"
+
+        self._axis_publisher = node.create_publisher(ControlMessage, self._topic_name, 10)
 
         self._control_msg = ControlMessage()
         self._control_msg.control_mode = ControlMode.VELOCITY_CONTROL
-        self._control_msg.input_mode = InputMode.PASSTHROUGH
+        self._control_msg.input_mode = InputMode.VEL_RAMP
         self._control_msg.input_vel = 0.0
 
         self._max_speed = max_speed
-
-        thread = Thread(target=self.enter_closed_loop, args=(service_name,))
-        thread.start()
 
     def set_velocity(self, vel: float):
         self._control_msg.input_vel = float(clip(vel, -self._max_speed, self._max_speed))
@@ -38,5 +88,8 @@ class MotorController():
         new_speed = self._max_speed + delta
         self.set_max_speed(0 if new_speed < 0 else new_speed)
 
-    def enter_closed_loop(self, service_name: str):
-        subprocess.run(["ros2", "service", "call", service_name, "odrive_can/srv/AxisState", "{axis_requested_state: 8}"])
+    def enter_closed_loop(self):
+        command = ["ros2", "service", "call", self._service_name, "odrive_can/srv/AxisState", "{axis_requested_state: 8}"]
+        Thread(target = lambda x: subprocess.run(x), args=(command,)).start()
+
+
