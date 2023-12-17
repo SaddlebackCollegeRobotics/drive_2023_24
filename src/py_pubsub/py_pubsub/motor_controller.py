@@ -1,12 +1,12 @@
 from rclpy.node import Node
 
 from odrive_can.msg import ControlMessage
+from odrive_can.srv import AxisState
+from odrive.enums import AxisState as AxisStateEnum
 
 from odrive.enums import InputMode
 from odrive.enums import ControlMode
 from numpy import clip
-from threading import Thread
-import subprocess
 
 
 class MotorControllerManager():
@@ -51,16 +51,19 @@ class MotorControllerManager():
     # Enter closed loop -------------------------------------------------
 
     def enter_closed_loop(self, node_id: int):
-        self._motor_controllers[node_id].enter_closed_loop()
+        self._motor_controllers[node_id].set_axis_state(AxisStateEnum.CLOSED_LOOP_CONTROL)
 
     def enter_closed_loop_all(self):
         for motor_controller in self._motor_controllers.values():
-            motor_controller.enter_closed_loop()
+            motor_controller.set_axis_state(AxisStateEnum.CLOSED_LOOP_CONTROL)
 
 
 class MotorController():
     
     def __init__(self, node: Node, node_id: int, max_speed: float):
+
+        self._node: Node = node
+        self._node_id: int = node_id
 
         self._service_name = "/odrive_axis" + str(node_id) + "/request_axis_state"
         self._topic_name = "/odrive_axis" + str(node_id) + "/control_message"
@@ -88,8 +91,24 @@ class MotorController():
         new_speed = self._max_speed + delta
         self.set_max_speed(0 if new_speed < 0 else new_speed)
 
-    def enter_closed_loop(self):
-        command = ["ros2", "service", "call", self._service_name, "odrive_can/srv/AxisState", "{axis_requested_state: 8}"]
-        Thread(target = lambda x: subprocess.run(x), args=(command,)).start()
+    def set_axis_state(self, axis_state: AxisStateEnum):
+
+        client = self._node.create_client(AxisState, self._service_name)
+
+        while not client.wait_for_service(timeout_sec=1.0):
+            self._node.get_logger().warn('Waiting for service ' + self._service_name)
+
+        request = AxisState.Request()
+        request.axis_requested_state = axis_state
+
+        future = client.call_async(request)
+        future.add_done_callback(self._axis_state_callback) #need partial??
+
+    def _axis_state_callback(self, future):
+        try:
+            response = future.result()
+            self._node.get_logger().info(f'Set axis ({self._node_id}) state: {AxisStateEnum(response.axis_state).name}')
+        except Exception as e:
+            self._node.get_logger().error(f'Failed to set axis ({self._node_id}) state: Current state {AxisStateEnum(response.axis_state).name}')
 
 
