@@ -5,12 +5,8 @@ from ament_index_python.packages import get_package_share_directory
 
 from .motor_controller import MotorControllerManager
 
-import ifcfg
-
 from . import gamepad_input
 import os
-import subprocess
-
 
 class MinimalPublisher(Node):
 
@@ -21,9 +17,6 @@ class MinimalPublisher(Node):
 
         self.package_share_directory = get_package_share_directory('py_pubsub')
 
-        # Check for CAN bus connection
-        self.configure_can_bus(interface='can0', bitrate=1000000)
-        
         # Set up motor controllers ---------------------------------------
 
         INITIAL_MAX_SPEED = 30
@@ -42,14 +35,13 @@ class MinimalPublisher(Node):
         timer_period = 1/10 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        
     def timer_callback(self):
         gamepad = gamepad_input.getGamepad(0)
 
         if gamepad != None:
-            (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.gamepad_deadzone)
-            (_, rs_y) = gamepad_input.getRightStick(gamepad, self.gamepad_deadzone)
-            (_, r2) = gamepad_input.getTriggers(gamepad, self.gamepad_deadzone)
+            (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.GAMEPAD_DEADZONE)
+            (_, rs_y) = gamepad_input.getRightStick(gamepad, self.GAMEPAD_DEADZONE)
+            (_, r2) = gamepad_input.getTriggers(gamepad, self.GAMEPAD_DEADZONE)
 
             if r2 > 0:
                 rs_y = ls_y
@@ -61,37 +53,21 @@ class MinimalPublisher(Node):
         else:
             self.motor_controller_manager.set_velocity_all(0)
 
-    # TODO - convert to lamdas hatNOrth and south
-    def hatNorth(self):
-        self.motor_controller_manager.change_max_speed_all(5)
-    
-    def hatSouth(self):
-        self.motor_controller_manager.change_max_speed_all(-5)
-
     def configure_gamepad_input(self):
         
-        self.gamepad_deadzone = 0.1
+        self.GAMEPAD_DEADZONE = 0.1
 
         config_path = os.path.join(self.package_share_directory, 'gamepads.config')
         gamepad_input.setConfigFile(config_path)
 
-        hatEvents = [self.hatNorth, self.hatSouth, None, None, None]
+        MAX_SPEED_DELTA = 5
+        hatNorth = lambda: self.motor_controller_manager.change_max_speed_all(MAX_SPEED_DELTA)
+        hatSouth = lambda: self.motor_controller_manager.change_max_speed_all(-MAX_SPEED_DELTA)
+
+        hatEvents = [hatNorth, hatSouth, None, None, None]
         gamepad_input.run_event_loop(hatEvents=hatEvents)
 
-    def configure_can_bus(self, interface: str, bitrate: int):
-
-        found = False
-        for name, _ in ifcfg.interfaces().items():
-            if name == interface:
-                found = True
-                self.get_logger().info("CAN bus found")
-                break  
-
-        if not found:  
-            self.get_logger().info("CAN bus not found")
-            exit(0)
-
-        subprocess.run(["sudo", "ip", "link", "set", interface, "up", "type", "can", "bitrate", str(bitrate)])
+    
 
 
 def main(args=None):

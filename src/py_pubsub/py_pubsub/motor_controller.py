@@ -1,7 +1,7 @@
 from rclpy.node import Node
 
 from odrive_can.msg import ControlMessage
-from odrive_can.srv import AxisState
+from odrive_can.srv import AxisState as AxisStateService
 from odrive.enums import AxisState as AxisStateEnum
 
 from odrive.enums import InputMode
@@ -22,7 +22,7 @@ class MotorControllerManager():
         if node_id not in self._motor_controllers:
             self._motor_controllers[node_id] = MotorController(self._node, node_id, max_speed)
         else:
-            print("Motor controller with node id " + str(node_id) + " already exists.")
+            self.get_logger().warning(f'Motor controller with node id {node_id} already exists.')
     
     # Set velocity ------------------------------------------------------
     
@@ -93,12 +93,12 @@ class MotorController():
 
     def set_axis_state(self, axis_state: AxisStateEnum):
 
-        client = self._node.create_client(AxisState, self._service_name)
+        client = self._node.create_client(AxisStateService, self._service_name)
 
         while not client.wait_for_service(timeout_sec=1.0):
-            self._node.get_logger().warn('Waiting for service ' + self._service_name)
+            self._node.get_logger().warning('Waiting for service ' + self._service_name)
 
-        request = AxisState.Request()
+        request = AxisStateService.Request()
         request.axis_requested_state = axis_state
 
         future = client.call_async(request)
