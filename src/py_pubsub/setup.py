@@ -22,8 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.subscriber_member_function:main',
+            'motor_control_relay = py_pubsub.motor_control_relay:main',
+            'drive_control_input = py_pubsub.drive_input_publisher:main',
         ],
     },
 )
