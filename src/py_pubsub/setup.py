@@ -12,6 +12,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         # Include gamepad config file
         ('share/' + package_name, ['config/gamepads.config']),
+        # Include launch files
+        ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

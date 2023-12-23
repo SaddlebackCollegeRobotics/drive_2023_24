@@ -12,7 +12,6 @@ class MinimalPublisher(Node):
         # Give the node a name.
         super().__init__('motor_control_relay')
 
-        # TODO - topic name will eventually need to be /control/motor_control_input
         self.control_input_subscriber = self.create_subscription(Float64MultiArray, '/control/drive_control_input', self.control_input_callback, 10)
 
         # Set up motor controllers ---------------------------------------
