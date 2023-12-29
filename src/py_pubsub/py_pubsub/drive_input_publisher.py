@@ -32,13 +32,54 @@ class DriveInputPublisher(Node):
         gamepad = gamepad_input.getGamepad(self.GAMEPAD_INDEX)
 
         if gamepad is not None:
-            (_, ls_y) = gamepad_input.getLeftStick(gamepad, self.GAMEPAD_DEADZONE)
-            (_, rs_y) = gamepad_input.getLeftStick(gamepad, self.GAMEPAD_DEADZONE)
+            (left_stick_x, _) = gamepad_input.getLeftStick(gamepad, 0.1)
+            (trigger_left, trigger_right) = gamepad_input.getTriggers(gamepad, 0.1)
 
-            pass
+            # TODO: Better logic!!!
+            
+            # TODO: Safety shutoff
+            # TODO: Cruise control
+            # TODO: Rumbling controller for rough terrain
+            """ TODO: Main controlling
+                    - Left trigger = backwards
+                    - Right trigger = forward
+                    - Left joystick (x-axis) = turning
+            """
+            
+            # D
+            if trigger_right and trigger_left:
+                self.msg.data = [0, 0]
+            elif trigger_right or trigger_left:
+                self.msg.data = [trigger_right - trigger_left] * 2
+                # Rotation logic ...
 
-            self.msg.data = [ls_y, rs_y]
-            self.control_publisher.publish(self.msg)
+                # Left turn (left_stick_x: [-1, 0)): decrease speed of left side
+                # Right turn (left_stick_x: (0, 1]): decrease speed of right side
+                
+                if left_stick_x < 0: # Left side
+                    if self.msg.data[0] > 0:
+                        self.msg.data[0] -= abs(left_stick_x)
+                    else:
+                        self.msg.data[0] += abs(left_stick_x)
+                elif left_stick_x > 0: # Right side
+                    if self.msg.data[1] > 0:
+                        self.msg.data[1] -= left_stick_x
+                    else:
+                        self.msg.data[1] += left_stick_x
+            else:
+                # Point turn logic
+                turn_amount = abs(left_stick_x)
+
+                if left_stick_x < 0: # Left turn
+                    self.msg.data = [-turn_amount, turn_amount]
+                elif left_stick_x > 0: # Right turn
+                    self.msg.data = [turn_amount, -turn_amount]
+                else:
+                    self.msg.data = [0, 0]
+
+        self.msg.data = [round(self.msg.data[0], 3), round(self.msg.data[1], 3)]
+
+        self.control_publisher.publish(self.msg)
             
     def configure_gamepad_input(self):
 
