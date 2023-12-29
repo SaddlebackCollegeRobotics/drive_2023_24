@@ -118,7 +118,7 @@ class MotorController():
         self._axis_publisher.publish(self._control_msg)
 
     def set_normalized_velocity(self, normalized_analog_input: float):
-        self.set_velocity(clip(normalized_analog_input, -1, 1) * self._max_speed)
+        self.set_velocity(normalized_analog_input * self._max_speed)
 
     def set_max_speed(self, max_speed: float):
         self._max_speed = abs(max_speed)
