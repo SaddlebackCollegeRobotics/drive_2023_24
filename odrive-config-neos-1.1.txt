@@ -46,7 +46,7 @@ odrv.axis0.controller.config.vel_integrator_gain = 0.5 * odrv.axis0.config.encod
 # Add can bus functionality
 # CAN node ID must be different for each device.
 odrv.config.enable_can_a = True
-odrv.axis0.config.can.node_id = 1
+odrv.axis0.config.can.node_id = 0
 odrv.can.config.baud_rate = 1000000
 
 # Enable cyclical data to reach over CAN
