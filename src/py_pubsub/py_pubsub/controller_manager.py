@@ -2,6 +2,7 @@ from os import path
 from time import sleep
 from enum import Enum
 from functools import partial
+from numpy import clip
 # Allow for this program to run standalone for testing without ROS packages
 if __name__ != '__main__':
     from ament_index_python.packages import get_package_share_directory
@@ -49,39 +50,24 @@ class ControllerScheme(Enum):
 
     @staticmethod
     def _trigger_based(input_state) -> list[float]:
-        """Trigger based input scheme internal logic"""
-        # TODO: Refactor logic!
+        """Trigger based input scheme internal logic
+        
+        Right and left Triggers control forward and backward movement 
+        respectively. Left stick x-axis used to a) make in-place turns if used 
+        alone, b) turn forward/backward when used in conjunction with triggers.
+        If both triggers are pressed at the same time, output is nullified.
+        """
         ls_x, _, _, _, lt, rt, *_ = input_state
 
         if rt and lt:
             move_vec = [0.0, 0.0]
         elif rt or lt:
+            # Linear movement
             move_vec = [rt - lt] * 2
-            # Rotation logic ...
-
-            # Left turn (ls_x: [-1, 0)): decrease speed of left side
-            # Right turn (ls_x: (0, 1]): decrease speed of right side
-            
-            if ls_x < 0: # Left side
-                if move_vec[0] > 0:
-                    move_vec[0] -= abs(ls_x)
-                else:
-                    move_vec[0] += abs(ls_x)
-            elif ls_x > 0: # Right side
-                if move_vec[1] > 0:
-                    move_vec[1] -= ls_x
-                else:
-                    move_vec[1] += ls_x
-        else:
-            # Point turn logic
-            turn_amount = abs(ls_x)
-
-            if ls_x < 0: # Left turn
-                move_vec = [-turn_amount, turn_amount]
-            elif ls_x > 0: # Right turn
-                move_vec = [turn_amount, -turn_amount]
-            else:
-                move_vec = [0.0, 0.0]
+        
+        # Turning
+        move_vec[0] += ls_x
+        move_vec[1] -= ls_x
         
         return move_vec
 
