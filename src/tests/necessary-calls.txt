@@ -3,6 +3,7 @@
 # https://docs.odriverobotics.com/v/latest/guides/can-guide.html
 # https://www.csselectronics.com/pages/dbc-editor-can-bus-database
 # https://docs.odriverobotics.com/releases/firmware
+# https://docs.odriverobotics.com/v/latest/manual/can-protocol.html
 
 
 
@@ -22,7 +23,7 @@
     - Gives disarm reason***
 
 
-- Read controller heartbeat? (Turn off cyclical / increase comm time??)
+- Read controller heartbeat
     - This gives procefure result, axis state, and axis, error.
 
 - Set control mode (velocity, pos, etc)
