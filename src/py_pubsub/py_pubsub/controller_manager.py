@@ -102,7 +102,9 @@ class ControllerManager:
     _deadzone: float
 
     _stopped: bool
+    _stop_pressed: bool
     _cruise_vec: (float, float)
+    _cruise_pressed: bool
 
     def __init__(self, \
                  scheme: ControllerScheme = ControllerScheme.BASIC, \
@@ -110,10 +112,15 @@ class ControllerManager:
                  deadzone: float = 0.1,
                  config_path: str = None) -> None:
         self._scheme = scheme
+
         self._configure_gamepad_input(config_path)
         self._gamepad_index = gamepad_index
         self._deadzone = deadzone
+
         self._stopped = False
+        self._stop_pressed = False
+        self._cruise_vec = None
+        self._cruise_pressed = False
 
     def handle_input(self) -> (float, float):
         # Reinitialize gamepad each call to handle new connections
@@ -133,8 +140,11 @@ class ControllerManager:
         
         # Emergency stop: press plus + minus to toggle
         if plus and minus:
-            self._stopped = not self._stopped
-            sleep(1.0) # HACK: refactor to not allow repeat reads of buttons
+            if not self._stop_pressed:
+                self._stopped = not self._stopped
+                self._stop_pressed = True
+        elif self._stop_pressed:
+            self._stop_pressed = False
         
         if self._stopped:
             return (0.0, 0.0)
@@ -144,8 +154,11 @@ class ControllerManager:
 
         # Cruise control: press home to toggle 'cruise control'
         if home:
-            self._cruise_vec = move_vec if not self._cruise_vec else None
-            sleep(1.0) # HACK: refactor to not allow repeat reads of buttons
+            if not self._cruise_pressed:
+                self._cruise_vec = move_vec if not self._cruise_vec else None
+                self._cruise_pressed = True
+        elif self._cruise_pressed:
+            self._cruise_pressed = False
         
         if self._cruise_vec:
             return self._cruise_vec
@@ -171,7 +184,6 @@ class ControllerManager:
 
 # For testing purposes
 if __name__ == '__main__':
-    import sys
     manager = ControllerManager(config_path = '../config/gamepads.config')
     schemes_list = list(map(lambda x: x.name.lower(), ControllerScheme))
     test_scheme = input(f'Enter an input scheme to test {schemes_list}: ')
