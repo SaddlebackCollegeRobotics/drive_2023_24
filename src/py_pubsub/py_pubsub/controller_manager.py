@@ -181,7 +181,7 @@ if __name__ == '__main__':
         print('Error, invalid scheme name!')
         exit()
 
-    manager.change_scheme(test_scheme)
+    manager.change_scheme(ControllerScheme[test_scheme.upper()])
 
     sleep(3)
 
