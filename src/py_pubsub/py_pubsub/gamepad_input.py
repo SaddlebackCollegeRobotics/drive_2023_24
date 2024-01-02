@@ -186,6 +186,23 @@ def getButtonValue(gamepad, buttonIndex: int):
     layout = getGamepadLayout(gamepad.get_instance_id())
     return False if layout == None else bool(gamepad.get_button(layout[buttonIndex]) == 1) 
 
+# Tells whether each of a list of buttons are pressed or not
+# Button index corresponds to order of button layout in config file
+def getButtonsValues(gamepad, *buttonIndicies) -> [bool]:
+
+    if not gamepad:
+        return [False] * len(buttonIndicies)
+
+    layout = getGamepadLayout(gamepad.get_instance_id())
+
+    if not layout:
+        return [False] * len(buttonIndicies)
+
+    ret = []
+    for i in buttonIndicies:
+        ret.append(bool(gamepad.get_button(layout[i]) == 1))
+
+    return ret
 
 # Rumble all gamepads
 # Low frequency is the heavy rumble (0 to 1)
