@@ -26,7 +26,7 @@ class ControllerScheme(Enum):
     """
 
     @staticmethod
-    def _basic(input_state) -> (float, float):
+    def _basic(input_state) -> list[float]:
         """Basic input scheme internal logic
         
         Left stick y controls left motors, same for right stick respectively
@@ -36,19 +36,19 @@ class ControllerScheme(Enum):
         """
         _, ls_y, _, rs_y, lt, rt, *_ = input_state
 
-        move_vec = (ls_y, rs_y)
+        move_vec = [ls_y, rs_y]
 
         # Check that: neither stick is active AND exactly one trigger is active
         if not (ls_y or rs_y) and (bool(lt) != bool(rt)):
             if lt:
-                move_vec = (-lt, lt)
+                move_vec = [-lt, lt]
             elif rt:
-                move_vec = (rt, -rt)
+                move_vec = [rt, -rt]
 
         return move_vec
 
     @staticmethod
-    def _trigger_based(input_state) -> (float, float):
+    def _trigger_based(input_state) -> list[float]:
         """Trigger based input scheme internal logic"""
         # TODO: Refactor logic!
         ls_x, _, _, _, lt, rt, *_ = input_state
@@ -83,7 +83,7 @@ class ControllerScheme(Enum):
             else:
                 move_vec = [0.0, 0.0]
         
-        return tuple(move_vec)
+        return move_vec
 
 
     BASIC = partial(_basic)

@@ -29,8 +29,7 @@ class DriveInputPublisher(Node):
         
         move_vec = self._controller_manager.handle_input()
 
-        # Tuple -> List
-        self.msg.data = list(move_vec)
+        self.msg.data = move_vec
         self.control_publisher.publish(self.msg)
 
 
