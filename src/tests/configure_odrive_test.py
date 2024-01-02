@@ -162,7 +162,7 @@ class ODriveCANInterface:
         # Clear errors (This also feeds the watchdog as a side effect)
         self.clear_errors()
 
-        # Put axis into full calibration sequence state
+        # Set axis state
         self.bus.send(can.Message(
             arbitration_id=(self.node_id << 5 | SET_AXIS_STATE),
             data=struct.pack('<I', axis_state),
