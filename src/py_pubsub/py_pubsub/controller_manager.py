@@ -1,5 +1,4 @@
 from os import path
-from time import sleep
 from enum import Enum
 from functools import partial
 from numpy import clip
@@ -170,6 +169,7 @@ class ControllerManager:
 
 # For testing purposes
 if __name__ == '__main__':
+    from time import sleep
     manager = ControllerManager(config_path = '../config/gamepads.config')
     schemes_list = list(map(lambda x: x.name.lower(), ControllerScheme))
     test_scheme = input(f'Enter an input scheme to test {schemes_list}: ')
