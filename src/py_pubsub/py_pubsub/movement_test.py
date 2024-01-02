@@ -13,7 +13,7 @@ def main():
     data = [0, 0]
     while True:
         gamepad = gamepad_input.getGamepad(0)
-
+        gamepad_input.
         (left_stick_x, _) = gamepad_input.getLeftStick(gamepad, 0.1)
         (trigger_left, trigger_right) = gamepad_input.getTriggers(gamepad, 0.1)
 
