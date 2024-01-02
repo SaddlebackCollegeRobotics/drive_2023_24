@@ -1,3 +1,7 @@
 {
-    "cmake.sourceDirectory": "/home/cameron/workspaces/drive_2023_24/src/odrive_can"
+    "cmake.sourceDirectory": "/home/cameron/workspaces/drive_2023_24/src/odrive_can",
+    "files.associations": {
+        "atomic": "cpp",
+        "condition_variable": "cpp"
+    }
 }

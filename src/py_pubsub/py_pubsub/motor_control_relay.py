@@ -4,6 +4,8 @@ from std_msgs.msg import Float64MultiArray
 
 from .motor_controller import MotorControllerManager
 
+from time import sleep
+
 
 class MinimalPublisher(Node):
 
@@ -16,7 +18,9 @@ class MinimalPublisher(Node):
 
         # Set up motor controllers ---------------------------------------
 
-        INITIAL_MAX_SPEED = 30
+        INITIAL_MAX_SPEED = 5 # 30
+
+        sleep(1)
 
         self.motor_controller_manager = MotorControllerManager(node=self, interface_name='can0', bitrate=1000000)
         

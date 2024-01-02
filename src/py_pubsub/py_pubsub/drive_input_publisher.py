@@ -29,6 +29,7 @@ class DriveInputPublisher(Node):
         self.timer = self.create_timer(self.PUBLISHER_PERIOD, self.timer_callback)
 
     def timer_callback(self):
+
         gamepad = gamepad_input.getGamepad(self.GAMEPAD_INDEX)
 
         if gamepad is not None:
@@ -45,10 +46,10 @@ class DriveInputPublisher(Node):
                     - Right trigger = forward
                     - Left joystick (x-axis) = turning
             """
-            
+
             # D
             if trigger_right and trigger_left:
-                self.msg.data = [0, 0]
+                self.msg.data = [0.0, 0.0]
             elif trigger_right or trigger_left:
                 self.msg.data = [trigger_right - trigger_left] * 2
                 # Rotation logic ...
@@ -75,9 +76,9 @@ class DriveInputPublisher(Node):
                 elif left_stick_x > 0: # Right turn
                     self.msg.data = [turn_amount, -turn_amount]
                 else:
-                    self.msg.data = [0, 0]
+                    self.msg.data = [0.0, 0.0]
 
-        self.msg.data = [round(self.msg.data[0], 3), round(self.msg.data[1], 3)]
+        self.msg.data = [float(round(self.msg.data[0], 3)), float(round(self.msg.data[1], 3))]
 
         self.control_publisher.publish(self.msg)
             
