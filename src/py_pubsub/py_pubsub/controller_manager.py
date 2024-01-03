@@ -7,6 +7,8 @@ if __name__ != '__main__':
     from ament_index_python.packages import get_package_share_directory
     from . import gamepad_input as gi
 else:
+    global DEBUG 
+    DEBUG = True
     import gamepad_input as gi
 
 class ControllerScheme(Enum):
@@ -120,10 +122,13 @@ class ControllerManager:
         lt, rt = gi.getTriggers(gamepad, self._deadzone)
         hat_x, hat_y = gi.getHat(gamepad)
 
-        # TODO: Get home/star button working
-        plus, minus = gi.getButtonsValues(gamepad, 4, 5)
+        plus, minus, home = gi.getButtonsValues(gamepad, 4, 5, 6)
         y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
         ls_b, rs_b = gi.getButtonsValues(gamepad, 9, 10)
+
+        if DEBUG:
+            print([i for i,b in \
+               enumerate(gi.getButtonsValues(gamepad, *range(0, 18))) if b])
 
         # Emergency stop: press plus + minus to toggle
         if plus and minus:
@@ -139,9 +144,9 @@ class ControllerManager:
 
         move_vec = self._scheme(ls_x, ls_y, rs_x, rs_y, lt, rt, hat_x, hat_y, \
                                 a, b, x, y)
-
-        # Cruise control: press ls_b to toggle
-        if ls_b:
+        
+        # Cruise control: press home to toggle
+        if home:
             if not self._cruise_pressed:
                 self._cruise_vec = move_vec if not self._cruise_vec else None
                 self._cruise_pressed = True
