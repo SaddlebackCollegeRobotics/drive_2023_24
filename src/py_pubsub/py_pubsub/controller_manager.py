@@ -26,7 +26,7 @@ class ControllerScheme(Enum):
     """
 
     @staticmethod
-    def _basic(input_state) -> list[float]:
+    def _basic(*input_state) -> list[float]:
         """Basic input scheme internal logic
         
         Left stick y controls left motors, same for right stick respectively
@@ -48,7 +48,7 @@ class ControllerScheme(Enum):
         return move_vec
 
     @staticmethod
-    def _trigger_based(input_state) -> list[float]:
+    def _trigger_based(*input_state) -> list[float]:
         """Trigger based input scheme internal logic
         
         Right and left Triggers control forward and backward movement 
@@ -58,16 +58,19 @@ class ControllerScheme(Enum):
         """
         ls_x, _, _, _, lt, rt, *_ = input_state
 
-        if rt and lt:
-            move_vec = [0.0, 0.0]
-        elif rt or lt:
+        move_vec = [0.0, 0.0]
+            
+        if not (rt and lt) and (rt or lt):
             # Linear movement
             move_vec = [rt - lt] * 2
         
         # Turning
-        move_vec[0] += ls_x
-        move_vec[1] -= ls_x
+        move_vec[0] -= ls_x
+        move_vec[1] += ls_x
         
+        # Ensure that values end up [-1, 1]
+        move_vec = list(clip(move_vec, -1, 1))
+
         return move_vec
 
 
@@ -107,22 +110,26 @@ class ControllerManager:
         self._cruise_vec = None
         self._cruise_pressed = False
 
-    def handle_input(self) -> (float, float):
+    def handle_input(self) -> list[float]:
         # Reinitialize gamepad each call to handle new connections
         gamepad = gi.getGamepad(self._gamepad_index)
 
         if not gamepad:
             print(f'WARN: No valid gamepad at {self._gamepad_index}!')
-            return (0.0, 0.0)
+            return [0.0, 0.0]
     
         ls_x, ls_y = gi.getLeftStick(gamepad, self._deadzone)
         rs_x, rs_y = gi.getRightStick(gamepad, self._deadzone)
+        # Negate all joystick values to obtain normal results
+        ls_x, ls_y, rs_x, rs_y = -ls_x, -ls_y, -rs_x, -rs_y
         lt, rt = gi.getTriggers(gamepad, self._deadzone)
         hat_x, hat_y = gi.getHat(gamepad)
-        # TODO: Verify these button index values
-        plus, minus, home = gi.getButtonsValues(10, 11, 12)
-        y, x, a, b = gi.getButtonsValues(4, 3, 0, 1)
-        
+
+        # TODO: Get home/star button working
+        plus, minus = gi.getButtonsValues(gamepad, 4, 5)
+        y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
+        ls_b, rs_b = gi.getButtonsValues(gamepad, 9, 10)
+
         # Emergency stop: press plus + minus to toggle
         if plus and minus:
             if not self._stop_pressed:
@@ -132,13 +139,14 @@ class ControllerManager:
             self._stop_pressed = False
         
         if self._stopped:
-            return (0.0, 0.0)
+            self._cruise_vec = None
+            return [0.0, 0.0]
 
         move_vec = self._scheme(ls_x, ls_y, rs_x, rs_y, lt, rt, hat_x, hat_y, \
                                 a, b, x, y)
 
-        # Cruise control: press home to toggle 'cruise control'
-        if home:
+        # Cruise control: press ls_b to toggle
+        if ls_b:
             if not self._cruise_pressed:
                 self._cruise_vec = move_vec if not self._cruise_vec else None
                 self._cruise_pressed = True
@@ -170,7 +178,9 @@ class ControllerManager:
 # For testing purposes
 if __name__ == '__main__':
     from time import sleep
-    manager = ControllerManager(config_path = '../config/gamepads.config')
+    import os
+    manager = ControllerManager(config_path = \
+                                'src/py_pubsub/config/gamepads.config')
     schemes_list = list(map(lambda x: x.name.lower(), ControllerScheme))
     test_scheme = input(f'Enter an input scheme to test {schemes_list}: ')
     if test_scheme.lower() in schemes_list:
@@ -184,6 +194,7 @@ if __name__ == '__main__':
     sleep(3)
 
     while True:
+        os.system('cls||clear')
         print(f'{manager.handle_input()}')
         sleep(0.2)
 
