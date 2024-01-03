@@ -9,11 +9,6 @@ if __name__ != '__main__':
 else:
     import gamepad_input as gi
 
-__all__ = [
-    'ControllerScheme',
-    'ControllerManager',
-]
-
 class ControllerScheme(Enum):
     """Set of valid control schemas with their logic.
     
