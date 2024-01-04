@@ -2,13 +2,28 @@ import json
 import can
 import struct
 from time import sleep
+from typing import Any
 from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError 
 
 class ODriveCANInterface:
+    """Handles behaviors of a specific CAN node.
+    """
     
     def __init__(self, node_id: int = 0, interface: str = 'can0',
                 endpoint_lookup_file: str = 'flat_endpoints.json') -> None:
+        """Initializes the CAN interface.
+        
+        Loads the endpoints lookup file, creates a new can bus instance and
+        asserts that the config file is of the correct version.
 
+        Args:
+            node_id (int, optional): ID of the motor to manage. Defaults to 0.
+                Must match `<odrv>.axis0.config.can.node_id`.
+            interface (str, optional): Name of the can port. Defaults to 'can0'.
+            endpoint_lookup_file (str, optional): Path to the the endpoint json
+                file. Defaults to 'flat_endpoints.json'.
+        """
+        # TODO: Determine preferred usage of class: manage entire CAN bus or one node?
         with open(endpoint_lookup_file, 'r') as f:
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
@@ -36,15 +51,21 @@ class ODriveCANInterface:
 
 
     def __del__(self) -> None:
+        """Shuts down the bus interface.
+        """
         self.bus.shutdown()
 
 
-    def flush_rx_buffer(self) -> None:
+    def flush_rx_buffer(self) -> None: # TODO: Change to "clear_messages"?
+        """Clears pending messages from can bus.
+        """
         # Flush CAN RX buffer so there are no more old pending messages
         while not (self.bus.recv(timeout=0) is None): pass
 
 
-    def _assert_version(self):
+    def _assert_version(self) -> None:
+        """Asserts that connected can bus version matches the one in endpoints.
+        """
 
         GET_VERSION = 0x00
 
@@ -70,7 +91,23 @@ class ODriveCANInterface:
         assert self.endpoint_data['hw_version'] == f"{hw_product_line}.{hw_version}.{hw_variant}"
 
 
-    def send_write_command(self, path, value_to_write):
+    def send_write_command(self, path, value_to_write) -> None:
+        """Sends an command to the can bus node to write to an arbitrary
+        parameter.
+
+        Args:
+            path (str): Path of the parameter to write.
+                Must be specified in endpoint.
+            value_to_write: Value to write to specified parameter.
+        
+        Example:
+            Sets the vel_integrator limit to 1.234, then reads from it.
+            
+            >>> path = 'axis0.controller.config.vel_integrator_limit'
+            >>> myInterface.send_write_command(path, 1.234)
+            >>> myInterface.send_read_command(path)
+            1.234
+        """
 
         RX_SDO = 0x04
 
@@ -86,8 +123,25 @@ class ODriveCANInterface:
         ))
 
 
-    def send_read_command(self, path):
+    def send_read_command(self, path: str) -> Any:
+        """Sends an command to the can bus node to read from an arbitrary
+        parameter.
+
+        Args:
+            path (str): Path of the parameter to read from.
+                Must be specified in endpoint.
         
+        Returns:
+            Any: Data retrieved from parameter at `path`.
+        
+        Example:
+            Sets the vel_integrator limit to 1.234, then reads from it.
+            
+            >>> path = 'axis0.controller.config.vel_integrator_limit'
+            >>> myInterface.send_write_command(path, 1.234)
+            >>> myInterface.send_read_command(path)
+            1.234
+        """
         RX_SDO = 0x04
         TX_SDO = 0x05
 
@@ -115,8 +169,13 @@ class ODriveCANInterface:
         return return_value
 
 
-    # For calling functions that don't return a value    
     def send_function_call(self, path):
+        """Sends an command to the can bus node to call an arbitrary
+        function, which does not return a value
+
+        Args:
+            path (str): Path to the function to call.
+        """
 
         RX_SDO = 0x04
 
@@ -130,31 +189,58 @@ class ODriveCANInterface:
         ))
 
 
+    # TODO: Simpler watchdog handling for end user. (Create thread automatically?)
     def feed_watchdog(self) -> None:
+        """Feeds the watchdog of the node to prevent timeout.
+        """
         self.send_function_call('axis0.watchdog_feed')
 
 
     def clear_errors(self) -> None:
+        """Clears all active errors.
+        """
         self.send_function_call('clear_errors')
     
     
     def save_configuration(self) -> None:
+        """Saves active configuration of the node.
+        """
         self.send_function_call('save_configuration')
 
 
     def reboot(self) -> None:
+        """Reboots the node.
+        """
         self.send_function_call('reboot')
         
 
-    def get_errors(self):
+    def get_errors(self) -> (int, int) :
+        """Gets all active errors as two uint32's, errors set as flags. The
+        first value is for general active errors, and second for disarm reason.
+
+        Returns:
+            (int, int): Set of active error(s)
+        """
+        # TODO: Automatically parse errors to be human readable
         return self.send_read_command('axis0.active_errors'), self.send_read_command('axis0.disarm_reason')
 
 
-    def set_axis_state(self, axis_state: AxisState) -> None: 
+    def set_axis_state(self, axis_state: AxisState) -> None:
+        """Sets the axis state of the can node.
+        This handles any pending messages and basically resets the can node.
+        It is ensured that the node is sending heartbeat messages before
+        attempting to set state.
+
+        Args:
+            axis_state (AxisState): State to seet the node to.
+        """
+        
+        # TODO: Give user return value or raise error to determine if method was successful
 
         SET_AXIS_STATE = 0x07
         HEARTBEAT = 0x01
 
+        # TODO: Option to configuring log verbosity level
         print(f"Setting axis state to {axis_state.name}")
 
         self.flush_rx_buffer()
@@ -188,6 +274,13 @@ class ODriveCANInterface:
 
 
     def set_input_vel(self, velocity: float) -> None:
+        """Sends an input velocity the the can node.
+        Behavior will differe depending on the values of vel_limit and 
+        input_mode.
+
+        Args:
+            velocity (float): Velocity, in rev/s, to send to the can node.
+        """
 
         # TODO - do we need torque feedforward to be variable?
 
