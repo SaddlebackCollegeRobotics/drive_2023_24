@@ -1,9 +1,22 @@
+"""The ``can_interface`` module provides an easy way to use CAN with ODrives.
+
+
+"""
+
 import json
-import can
-import struct
-from time import sleep
 from typing import Any
-from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError 
+import struct
+from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError
+import can
+
+__all__ = [
+    'can_bus',
+    ''
+]
+
+# TODO: Determine preferred usage of interface(s)
+class ODriveCanNode:
+    pass
 
 class ODriveCANInterface:
     """Handles behaviors of a specific CAN node.
@@ -23,7 +36,7 @@ class ODriveCANInterface:
             endpoint_lookup_file (str, optional): Path to the the endpoint json
                 file. Defaults to 'flat_endpoints.json'.
         """
-        # TODO: Determine preferred usage of class: manage entire CAN bus or one node?
+        # TODO: Auto-configure the bus interface status (bring online + bitrate)
         with open(endpoint_lookup_file, 'r') as f:
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
@@ -296,7 +309,8 @@ class ODriveCANInterface:
 
 
 def main():
-
+    from time import sleep
+    
     can_interface = ODriveCANInterface(node_id=0, interface='can0', endpoint_lookup_file='flat_endpoints.json')
 
     path = 'axis0.controller.config.vel_integrator_limit'
@@ -339,10 +353,6 @@ def main():
     while True:
             can_interface.feed_watchdog()
             sleep(0.01)
-
-
-
-
 
 if __name__ == '__main__':
     try:
