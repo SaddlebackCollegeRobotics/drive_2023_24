@@ -26,7 +26,7 @@ class MotorControllerManager():
     def add_motor_controller(self, node_id: int, max_speed: float):
         if node_id not in self._motor_controllers:
             self._motor_controllers[node_id] = MotorController(self._node, node_id, max_speed)
-        else:
+        else: # FIXME
             self.get_logger().warning(f'Motor controller with node id {node_id} already exists.')
     
     def count(self):
