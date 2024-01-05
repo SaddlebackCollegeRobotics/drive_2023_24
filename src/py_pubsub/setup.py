@@ -5,7 +5,9 @@ package_name = 'py_pubsub'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=[package_name, 
+              package_name + '/can_manager', 
+              package_name + '/can_manager/odrive_interface'],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -14,6 +16,9 @@ setup(
         ('share/' + package_name, ['config/gamepads.config']),
         # Include launch files
         ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
+        # Include ODrive interface
+        ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/commands.json']),
+        ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/flat_endpoints.json']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -3,6 +3,7 @@
 
 """
 
+from abc import ABC
 import json
 from typing import Any
 import struct
@@ -11,11 +12,36 @@ import can
 
 __all__ = [
     'can_bus',
-    ''
+    'odrive_node'
 ]
 
+class CanNode(ABC):
+    pass
+
+class OdriveNode(CanNode):
+    pass
+
+class XSensorNode(CanNode):
+    pass
+
+
+
+
+class CanManagerRosNode:
+    _nodes: dict(int, CanNode)
+    _endpoint_data
+    def __init__():
+        pass
+
+
+
+
+
+
+
+
 # TODO: Determine preferred usage of interface(s)
-class ODriveCanNode:
+class ODriveNode:
     pass
 
 class ODriveCANInterface:
