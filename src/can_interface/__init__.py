@@ -1,9 +1,48 @@
+"""The ``can_interface`` module provides an easy way to use CAN with ODrives.
+
+
+"""
+
+from abc import ABC
 import json
-import can
-import struct
-from time import sleep
 from typing import Any
-from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError 
+import struct
+from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError
+import can
+
+__all__ = [
+    'can_bus',
+    'odrive_node'
+]
+
+class CanNode(ABC):
+    pass
+
+class OdriveNode(CanNode):
+    pass
+
+class XSensorNode(CanNode):
+    pass
+
+
+
+
+class CanManagerRosNode:
+    _nodes: dict(int, CanNode)
+    _endpoint_data
+    def __init__():
+        pass
+
+
+
+
+
+
+
+
+# TODO: Determine preferred usage of interface(s)
+class ODriveNode:
+    pass
 
 class ODriveCANInterface:
     """Handles behaviors of a specific CAN node.
@@ -23,7 +62,7 @@ class ODriveCANInterface:
             endpoint_lookup_file (str, optional): Path to the the endpoint json
                 file. Defaults to 'flat_endpoints.json'.
         """
-        # TODO: Determine preferred usage of class: manage entire CAN bus or one node?
+        # TODO: Auto-configure the bus interface status (bring online + bitrate)
         with open(endpoint_lookup_file, 'r') as f:
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
@@ -47,7 +86,7 @@ class ODriveCANInterface:
 
         # Assert that the endpoint lookup file matches the firmware 
         # and hardware version of the controller.
-        # self._assert_version()
+        self._assert_version()
 
 
     def __del__(self) -> None:
@@ -261,6 +300,7 @@ class ODriveCANInterface:
                 
                 self.feed_watchdog() # Feed watchdog while waiting for axis to be set
                 error, state, result, traj_done = struct.unpack('<IBBB', bytes(msg.data[:7]))
+
                 if result != ProcedureResult.BUSY:
                     if result == ProcedureResult.SUCCESS:
                         print(f"Axis state set successfully {AxisState(state).name}")
@@ -295,43 +335,40 @@ class ODriveCANInterface:
 
 
 def main():
+    from time import sleep
+    
+    can_interface = ODriveCANInterface(node_id=0, interface='can0', endpoint_lookup_file='flat_endpoints.json')
 
-    can_interface = ODriveCANInterface(node_id=1, interface='can0', endpoint_lookup_file='flat_endpoints.json')
+    path = 'axis0.controller.config.vel_integrator_limit'
 
-    # path = 'axis0.controller.config.vel_integrator_gain'
+    # Read the current velocity integrator limit
+    return_value = can_interface.send_read_command(path)
+    print(f"Current value: {return_value}")
 
-    # Read the current velocity integrator gain
-    # return_value = can_interface.send_read_command(path)
-    # print(f"Current value: {return_value}")
+    # Write a new velocity integrator limit
+    value_to_write = 1.234
+    can_interface.send_write_command(path, value_to_write)
+    print(f"New value written: {value_to_write}")
 
-    # Write a new velocity integrator gain
-    # value_to_write = 4.0
-    # can_interface.send_write_command(path, value_to_write)
-    # print(f"New value written: {value_to_write}")
+    # Read the new velocity integrator limit
+    return_value = can_interface.send_read_command(path)
+    print(f"New value: {return_value}")
 
-    # Read the new velocity integrator gain
-    # return_value = can_interface.send_read_command(path)
-    # print(f"New value: {return_value}")
+    # Reboot the controller to remove the new velocity integrator limit
+    can_interface.reboot()
 
-    # Reboot the controller to remove the new velocity integrator gain
-    # can_interface.reboot()
-
-    # print('Sleeping for 5 seconds...')
-    # sleep(5)
+    print('Sleeping for 5 seconds...')
+    sleep(5)
 
     # Run full calibration sequence
-    # can_interface.set_axis_state(AxisState.FULL_CALIBRATION_SEQUENCE)
+    can_interface.set_axis_state(AxisState.FULL_CALIBRATION_SEQUENCE)
 
     # Save the configuration
-    # can_interface.save_configuration()
-    # print("Configuration saved")
+    can_interface.save_configuration()
+    print("Configuration saved")
 
-    # print('Sleeping for 5 seconds...')
-    # sleep(5)
-
-    # # Check if value saved
-    # return_value = can_interface.send_read_command(path)
-    # print(f"New value: {return_value}")
+    print('Sleeping for 5 seconds...')
+    sleep(5)
 
     # Run closed loop control
     can_interface.set_axis_state(AxisState.CLOSED_LOOP_CONTROL)
@@ -341,8 +378,7 @@ def main():
 
     while True:
             can_interface.feed_watchdog()
-            sleep(0.25)
-
+            sleep(0.01)
 
 if __name__ == '__main__':
     try:
