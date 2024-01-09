@@ -7,6 +7,7 @@ setup(
     version='0.0.0',
     packages=find_packages(),
     package_data={'': ['*.json', '*.config']},
+    include_package_data=True,
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -14,6 +15,14 @@ setup(
         # Include launch files
         ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
     ],
+    #     # Include gamepad config file
+    #     ('share/' + package_name, ['config/gamepads.config']),
+    #     # Include launch files
+    #     ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
+    #     # Include ODrive interface
+    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/commands.json']),
+    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/flat_endpoints.json']),
+    # ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='cameron',

@@ -2,7 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from .motor_controller import MotorControllerManager
+from .motor_controller import MotorControllerManager, ODriveCanInterface
+from odrive.enums import AxisState
 
 from time import sleep
 
@@ -18,27 +19,30 @@ class MinimalPublisher(Node):
 
         # Set up motor controllers ---------------------------------------
 
-        INITIAL_MAX_SPEED = 5 # 30
+        self._max_speed = 30
 
-        sleep(1)
-
-        self.motor_controller_manager = MotorControllerManager(node=self, interface_name='can0', bitrate=1000000)
+        self._manager = MotorControllerManager(can_interface=ODriveCanInterface())
         
-        for i in range(4):
-            self.motor_controller_manager.add_motor_controller(node_id=i, max_speed=INITIAL_MAX_SPEED)
-
-        self.motor_controller_manager.enter_closed_loop_all()
-        # self.motor_controller_manager.full_calibration_sequence(2)
-        # self.motor_controller_manager.full_calibration_sequence_all()
+        # TODO: Check ordering
+        self._manager.add_motor_controller('front_left', 0, self._max_speed)
+        self._manager.add_motor_controller('back_left', 1, self._max_speed)
+        self._manager.add_motor_controller('back_right', 2, self._max_speed)
+        self._manager.add_motor_controller('front_right', 3, self._max_speed)
+        
+        # self._manager.set_axis_state_all(AxisState.CLOSED_LOOP_CONTROL)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
         norm_vel_left, norm_vel_right = msg.data[0], msg.data[1]
+        
+        if abs(norm_vel_left) > 1 or abs(norm_vel_right) > 1:
+            raise ValueError
 
-        self.motor_controller_manager.set_normalized_velocity(0, norm_vel_left)
-        self.motor_controller_manager.set_normalized_velocity(1, norm_vel_left)
-        self.motor_controller_manager.set_normalized_velocity(2, norm_vel_right)
-        self.motor_controller_manager.set_normalized_velocity(3, norm_vel_right)
+        self._manager['front_left'].set_normalized_velocity(norm_vel_left)
+        self._manager['back_left'].set_normalized_velocity(norm_vel_left)
+        self._manager['front_right'].set_normalized_velocity(norm_vel_right)
+        self._manager['back_right'].set_normalized_velocity(norm_vel_right)
+
         
 
 def main(args=None):
