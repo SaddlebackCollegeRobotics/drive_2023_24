@@ -12,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        # Include launch files
+        ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
     ],
     #     # Include gamepad config file
     #     ('share/' + package_name, ['config/gamepads.config']),
