@@ -3,12 +3,11 @@ from enum import Enum
 from functools import partial
 from numpy import clip
 # Allow for this program to run standalone for testing without ROS packages
-DEBUG = False
 if __name__ != '__main__':
     from ament_index_python.packages import get_package_share_directory
     from . import gamepad_input as gi
+    DEBUG = True
 else:
-    global DEBUG
     DEBUG = True
     import gamepad_input as gi
 
