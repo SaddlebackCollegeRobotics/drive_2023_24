@@ -2,8 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-# from .motor_controller import MotorControllerManager
-from can_manager import OdriveCanManager
+from .motor_controller import MotorControllerManager, ODriveCanInterface
 from odrive.enums import AxisState
 
 from time import sleep
@@ -20,13 +19,17 @@ class MinimalPublisher(Node):
 
         # Set up motor controllers ---------------------------------------
 
-        self._max_velocity = 30
+        self._max_speed = 30
 
-        self._manager = OdriveCanManager([0, 1, 2, 3])
+        self._manager = MotorControllerManager(can_interface=ODriveCanInterface())
         
+        # TODO: Check ordering
+        self._manager.add_motor_controller('front_left', 0, self._max_speed)
+        self._manager.add_motor_controller('back_left', 1, self._max_speed)
+        self._manager.add_motor_controller('back_right', 2, self._max_speed)
+        self._manager.add_motor_controller('front_right', 3, self._max_speed)
         
-        self._manager.set_axis_state_all(AxisState.CLOSED_LOOP_CONTROL)
-        self._manager.set_parameter([0, 2], 'identify', True)
+        # self._manager.set_axis_state_all(AxisState.CLOSED_LOOP_CONTROL)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
@@ -35,8 +38,10 @@ class MinimalPublisher(Node):
         if abs(norm_vel_left) > 1 or abs(norm_vel_right) > 1:
             raise ValueError
 
-        self._manager.set_velocity([0, 1], norm_vel_left * self._max_velocity)
-        self._manager.set_velocity([2, 3], norm_vel_right * self._max_velocity)
+        self._manager['front_left'].set_normalized_velocity(norm_vel_left)
+        self._manager['back_left'].set_normalized_velocity(norm_vel_left)
+        self._manager['front_right'].set_normalized_velocity(norm_vel_right)
+        self._manager['back_right'].set_normalized_velocity(norm_vel_right)
 
         
 
