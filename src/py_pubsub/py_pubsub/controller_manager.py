@@ -1,13 +1,14 @@
-from os import path
+from pathlib import Path
 from enum import Enum
 from functools import partial
 from numpy import clip
 # Allow for this program to run standalone for testing without ROS packages
+DEBUG = False
 if __name__ != '__main__':
     from ament_index_python.packages import get_package_share_directory
     from . import gamepad_input as gi
 else:
-    global DEBUG 
+    global DEBUG
     DEBUG = True
     import gamepad_input as gi
 
@@ -167,11 +168,10 @@ class ControllerManager:
 
     def _configure_gamepad_input(self, config_path: str) -> None:
         if not config_path:
-            config_path = \
-            path.join(get_package_share_directory('py_pubsub'), \
-                      'gamepads.config')
-        gi.setConfigFile(config_path)
-
+            config_path = 'gamepads.config'
+        config_path_str = str((Path(__file__).parent / config_path).resolve())
+        
+        gi.setConfigFile(config_path_str)
         gi.run_event_loop()
 
 

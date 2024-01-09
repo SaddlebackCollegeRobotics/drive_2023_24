@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from controller_manager import ControllerScheme, ControllerManager
+from .controller_manager import ControllerScheme, ControllerManager
 
 # TODO - Add service for changing max speed of motors for drive system.
 
