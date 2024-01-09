@@ -1,18 +1,26 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 package_name = 'py_pubsub'
 
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=find_packages(),
+    package_data={'': ['*.json', '*.config']},
+    include_package_data=True,
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        # Include gamepad config file
-        ('share/' + package_name, ['config/gamepads.config']),
     ],
+    #     # Include gamepad config file
+    #     ('share/' + package_name, ['config/gamepads.config']),
+    #     # Include launch files
+    #     ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
+    #     # Include ODrive interface
+    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/commands.json']),
+    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/flat_endpoints.json']),
+    # ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='cameron',
@@ -22,8 +30,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.subscriber_member_function:main',
+            'motor_control_relay = py_pubsub.motor_control_relay:main',
+            'drive_control_input = py_pubsub.drive_input_publisher:main',
         ],
     },
 )
