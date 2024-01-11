@@ -2,16 +2,15 @@ import json
 import can
 import struct
 from time import sleep, time
-from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError
+from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError 
 from numpy import clip
-from pathlib import Path
 
 class MotorControllerManager:
     
-    def __init__(self, can_interface: "ODriveCanInterface") -> None:
+    def __init__(self, can_interface) -> None:
 
         # Key: node id, Value: MotorController
-        self._motor_controllers: dict[str, MotorController] = {}
+        self._motor_controllers: dict[int, MotorController] = {}
         self._can_interface = can_interface
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float):
@@ -35,30 +34,29 @@ class MotorControllerManager:
         for motor_controller in self._motor_controllers.values():
             motor_controller.set_normalized_velocity(normalized_analog_input)
 
-    def feed_watchdog_all(self):
+    def write_param_all(self, path, value):
         for motor_controller in self._motor_controllers.values():
-            motor_controller.feed_watchdog()
+            motor_controller.write_param(path, value)
+
+    def save_configuration_all(self):
+        for motor_controller in self._motor_controllers.values():
+            motor_controller.save_configuration()
+
     
     def count(self):
         return len(self._motor_controllers)
 
-    # Dunder methods as wrappers
-    
-    def __getitem__(self, key: str) -> "MotorController":
-        return self.get_motor_controller(key)
 
-
-class ODriveCanInterface():
+class ODrive_CAN_Interface():
 
     def __init__(self, interface: str = 'can0',
                 endpoint_lookup_file: str = 'flat_endpoints.json') -> None:
-        path = Path(__file__).parent / endpoint_lookup_file
-        with path.open('r') as f:
+
+        with open(endpoint_lookup_file, 'r') as f:
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
 
         # Odrive CAN node ID
-        # self.bus = can.interface.Bus(interface='virtual')# interface, bustype='socketcan',)
         self.bus = can.interface.Bus(interface, bustype='socketcan',)
         
         self.OPCODE_READ = 0x00
@@ -116,8 +114,7 @@ class ODriveCanInterface():
     def _await_can_reply(self, node_id, command_id, timeout = 5.0):
 
         initial_time = time()
-        for msg in self.bus: # FIXME: Improper check for timeout
-
+        for msg in self.bus:
             if msg.arbitration_id == (node_id<< 5 | command_id):
                 return msg 
             if time() - initial_time > timeout:
@@ -178,8 +175,22 @@ class ODriveCanInterface():
     def feed_watchdog(self, node_id) -> None:
         self.send_function_call(node_id, 'axis0.watchdog_feed')
 
+
     def clear_errors(self, node_id) -> None:
         self.send_function_call(node_id, 'clear_errors')
+    
+
+    def save_configuration(self, node_id) -> None:
+        self.send_function_call(node_id, 'save_configuration')
+
+
+    def reboot(self, node_id) -> None:
+        self.send_function_call(node_id, 'reboot')
+
+
+    def get_errors(self, node_id):
+        return self.read_param(node_id, 'axis0.active_errors'), self.read_param(node_id, 'axis0.disarm_reason')
+
 
     def set_axis_state(self, node_id, axis_state: AxisState) -> None: 
 
@@ -199,11 +210,9 @@ class ODriveCanInterface():
 
             self.feed_watchdog(node_id) # Feed watchdog while waiting for axis to be set
 
-            msg = self._await_can_reply(node_id, HEARTBEAT) # FIXME: May pick up previou
+            msg = self._await_can_reply(node_id, HEARTBEAT)
             msg.data = msg.data[:7] # Remove unused bytes
             error, state, result, traj_done = self._unpack_can_reply('<IBBB', msg)
-
-            print(f"Axis state: {AxisState(state).name}")
 
             if result != ProcedureResult.BUSY:
                 if result == ProcedureResult.SUCCESS:
@@ -224,7 +233,7 @@ class ODriveCanInterface():
 
 class MotorController():
     
-    def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float):
+    def __init__(self, can_interface, node_id: int, max_speed: float):
 
         self._can_interface = can_interface
         self._node_id: int = node_id
@@ -243,29 +252,13 @@ class MotorController():
 
     def change_max_speed(self, delta: float):
         new_speed = self._max_speed + delta
-        self.set_max_speed(new_speed)
+        self.set_max_speed(0 if new_speed < 0 else new_speed)
 
     def set_axis_state(self, axis_state: AxisState):
         self._can_interface.set_axis_state(self._node_id, axis_state)
-        
-    def clear_errors(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'clear_errors')
-    
-    def save_configuration(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'save_configuration')
 
-    def reboot(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'reboot')
+    def save_configuration(self):
+        self._can_interface.save_configuration(self._node_id)
 
-    def get_current(self) -> float:
-        return self._can_interface.read_param(self._node_id, 'ibus')
-
-    def get_errors(self, node_id) -> tuple[ODriveError, ODriveError]:
-        errs = (
-            ODriveError(self._can_interface.read_param(node_id, 'axis0.active_errors')),
-            ODriveError(self._can_interface.read_param(node_id, 'axis0.disarm_reason'))
-        )
-        return errs
-    
-    def feed_watchdog(self) -> None:
-        self._can_interface.feed_watchdog(self._node_id)
+    def write_param(self, path, value):
+        self._can_interface.write_param(self._node_id, path, value)

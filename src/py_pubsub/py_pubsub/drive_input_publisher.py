@@ -29,6 +29,8 @@ class DriveInputPublisher(Node):
         
         move_vec = self._controller_manager.handle_input()
 
+        move_vec = [float(i) for i in move_vec]
+
         self.msg.data = move_vec
         self.control_publisher.publish(self.msg)
 

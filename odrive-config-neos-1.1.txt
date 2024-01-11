@@ -4,7 +4,7 @@ odrv = odrv0
 odrv.config.dc_bus_overvoltage_trip_level = 54
 odrv.config.dc_bus_undervoltage_trip_level = 11.1
 odrv.config.dc_max_positive_current = 50
-odrv.config.dc_max_negative_current = -50
+odrv.config.dc_max_negative_current = -7
 odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
 odrv.axis0.config.motor.torque_constant = 0.01748414376321353
 odrv.axis0.config.motor.pole_pairs = 7
@@ -25,8 +25,11 @@ odrv.axis0.controller.config.spinout_electrical_power_threshold = 9999
 odrv.axis0.controller.config.spinout_mechanical_power_threshold = -9999
 
 # Brake Resistor
-odrv0.config.brake_resistor0.enable = True
-odrv0.config.brake_resistor0.resistance = 2
+odrv.config.brake_resistor0.enable = True
+odrv.config.brake_resistor0.resistance = 2
+odrv.config.brake_resistor0.enable_dc_bus_voltage_feedback = True
+odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_start = 40
+odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_end = 46
 
 odrv.axis0.config.torque_soft_min = -0.25
 odrv.axis0.config.torque_soft_max = 0.25
