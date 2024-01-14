@@ -76,18 +76,9 @@ class ODrive_CAN_Interface():
     def __del__(self) -> None:
         self.bus.shutdown()
 
-
     def flush_rx_buffer(self) -> None:
         # Flush CAN RX buffer so there are no more old pending messages
         while not (self.bus.recv(timeout=0) is None): pass
-
-
-    def _assert_can_connection(self):
-        
-        # Todo - check if CAN connection is alive / able to send and receive messages
-        # A get version call may be good.
-        pass
-
 
     def _assert_version(self, node_id):
 

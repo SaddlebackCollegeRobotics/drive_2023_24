@@ -52,7 +52,9 @@ class ODriveCanInterface():
 
     def __init__(self, interface: str = 'can0',
                 endpoint_lookup_file: str = 'flat_endpoints.json') -> None:
+        
         path = Path(__file__).parent / endpoint_lookup_file
+        
         with path.open('r') as f:
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
@@ -73,23 +75,13 @@ class ODriveCanInterface():
             'uint64': 'Q', 'int64': 'q',
             'float': 'f'
         }
-
     
     def __del__(self) -> None:
         self.bus.shutdown()
 
-
     def flush_rx_buffer(self) -> None:
         # Flush CAN RX buffer so there are no more old pending messages
         while not (self.bus.recv(timeout=0) is None): pass
-
-
-    def _assert_can_connection(self):
-        
-        # Todo - check if CAN connection is alive / able to send and receive messages
-        # A get version call may be good.
-        pass
-
 
     def _assert_version(self, node_id):
 
@@ -123,7 +115,6 @@ class ODriveCanInterface():
             if time() - initial_time > timeout:
                 raise Exception(f"Timeout waiting for CAN reply for command {command_id}")
 
-
     def _send_can_message(self, node_id, command_id, input_types = None, *input_data):
 
         self.bus.send(can.Message(
@@ -132,7 +123,6 @@ class ODriveCanInterface():
                 is_extended_id = False
         ))
 
-
     def _get_endpoint_info(self, path: str):
         
         endpoint_id = self.endpoints[path]['id']
@@ -140,7 +130,6 @@ class ODriveCanInterface():
 
         return endpoint_id, endpoint_type
     
-
     def write_param(self, node_id, path, value):
 
         RX_SDO = 0x04
@@ -148,7 +137,6 @@ class ODriveCanInterface():
         endpoint_id, endpoint_type = self._get_endpoint_info(path)
 
         self._send_can_message(node_id, RX_SDO, '<BHB' + self.format_lookup[endpoint_type], self.OPCODE_WRITE, endpoint_id, 0, value)
-
 
     def read_param(self, node_id, path):
         
@@ -167,19 +155,11 @@ class ODriveCanInterface():
 
         return return_value
     
-
     def send_function_call(self, node_id, path: str, inputs: tuple = None, outputs: tuple = None):
 
         RX_SDO = 0x04
         endpoint_id, _ = self._get_endpoint_info(path)
         self._send_can_message(node_id, RX_SDO, '<BHB', self.OPCODE_WRITE, endpoint_id, 0)
-
-
-    def feed_watchdog(self, node_id) -> None:
-        self.send_function_call(node_id, 'axis0.watchdog_feed')
-
-    def clear_errors(self, node_id) -> None:
-        self.send_function_call(node_id, 'clear_errors')
 
     def set_axis_state(self, node_id, axis_state: AxisState) -> None: 
 
@@ -215,11 +195,16 @@ class ODriveCanInterface():
 
                 break
 
-
     def set_input_vel(self, node_id, velocity: float, torque_feedforward: float = 0.0) -> None:
 
         SET_INPUT_VEL = 0x0d
         self._send_can_message(node_id, SET_INPUT_VEL, '<ff', velocity, torque_feedforward)
+
+    def clear_errors(self, node_id):
+        self.send_function_call(node_id, 'clear_errors')
+
+    def feed_watchdog(self, node_id):
+        self.send_function_call(node_id, 'axis0.watchdog_feed')
 
 
 class MotorController():
@@ -247,9 +232,6 @@ class MotorController():
 
     def set_axis_state(self, axis_state: AxisState):
         self._can_interface.set_axis_state(self._node_id, axis_state)
-        
-    def clear_errors(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'clear_errors')
     
     def save_configuration(self) -> None:
         self._can_interface.send_function_call(self._node_id, 'save_configuration')
@@ -257,15 +239,16 @@ class MotorController():
     def reboot(self) -> None:
         self._can_interface.send_function_call(self._node_id, 'reboot')
 
-    def get_current(self) -> float:
-        return self._can_interface.read_param(self._node_id, 'ibus')
-
-    def get_errors(self, node_id) -> tuple[ODriveError, ODriveError]:
+    def get_errors(self) -> tuple[ODriveError, ODriveError]:
         errs = (
-            ODriveError(self._can_interface.read_param(node_id, 'axis0.active_errors')),
-            ODriveError(self._can_interface.read_param(node_id, 'axis0.disarm_reason'))
+            ODriveError(self._can_interface.read_param(self._node_id, 'axis0.active_errors')),
+            ODriveError(self._can_interface.read_param(self._node_id, 'axis0.disarm_reason'))
         )
         return errs
     
+    def clear_errors(self) -> None:
+        self._can_interface.clear_errors(self._node_id)
+    
     def feed_watchdog(self) -> None:
         self._can_interface.feed_watchdog(self._node_id)
+

@@ -7,6 +7,8 @@ from odrive.enums import AxisState
 
 from time import sleep
 from threading import Thread
+from signal import signal, SIGINT
+
 
 class MinimalPublisher(Node):
 
@@ -15,11 +17,15 @@ class MinimalPublisher(Node):
         # Give the node a name.
         super().__init__('motor_control_relay')
 
+        # Signal handler for Ctrl+C
+        # signal(SIGINT, self.signalHandler)
+
         self.control_input_subscriber = self.create_subscription(Float64MultiArray, '/control/drive_control_input', self.control_input_callback, 10)
 
         # Set up motor controllers ---------------------------------------
 
         self._max_speed = 30
+
 
         self._manager = MotorControllerManager(can_interface=ODriveCanInterface())
         
@@ -31,15 +37,20 @@ class MinimalPublisher(Node):
         
         self._manager.set_axis_state_all(AxisState.CLOSED_LOOP_CONTROL)
 
-        watchdog_thread = Thread(target=self.feed_watchdog, args=(self._manager,))
-        watchdog_thread.start()
+        # self.watchdog_thread = Thread(target=self.feed_watchdog_loop, args=(self._manager,))
+        # self.watchdog_thread.loop = True
 
+        # self.watchdog_thread.start()
 
-    def feed_watchdog(self, manager: MotorControllerManager):
-        while True:
-            manager.feed_watchdog_all()
-            sleep(0.5)
+    # def signalHandler(self, signal, frame):
+    #     self.watchdog_thread.loop = False
+    #     self.watchdog_thread.join()
+    #     exit(0)
 
+    # def feed_watchdog_loop(self, manager: MotorControllerManager):
+    #     while getattr(thread, "loop", True):
+    #         manager.feed_watchdog_all()
+    #         sleep(0.5)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
