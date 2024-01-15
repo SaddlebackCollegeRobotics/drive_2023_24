@@ -1,25 +1,35 @@
-# Odrive S1 config. For the maxon frameless motors. Firmware 0.6.8
+# Odrive S1 config - Firmware 0.6.8
+# For the Maxon EC 60 flat motor.
+# https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecflat/ecflat60/625858?etcc_cu=onsite&etcc_med=Header%20Suche&etcc_cmp=mit%20Ergebnis&etcc_ctv=Layer&query=625858
 
 CAN_NODE_ID = 0
 CAN_BITRATE = 1000000
+ENABLE_BRAKE_RESISTOR = False
 
 odrv = odrv0
 odrv.config.dc_bus_overvoltage_trip_level = 48
 odrv.config.dc_bus_undervoltage_trip_level = 19.2
-odrv.config.dc_max_positive_current = 78
-odrv.config.dc_max_negative_current = -78
+odrv.config.dc_max_positive_current = 40
+odrv.config.dc_max_negative_current = -7
 odrv.axis0.config.motor.motor_type = MotorType.GIMBAL
 
 odrv.axis0.config.motor.phase_resistance = 0.293
 odrv.axis0.config.motor.phase_resistance_valid = True
 
-odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+# 8.27 / Motor KV (rpm/V)
+odrv.axis0.config.motor.torque_constant = 8.27 / 182
+
 odrv.axis0.config.motor.pole_pairs = 7
-odrv.axis0.config.motor.current_soft_max = 78
-odrv.axis0.config.motor.current_hard_max = 81.9
-odrv.axis0.config.motor.calibration_current = 10
-odrv.axis0.config.motor.resistance_calib_max_voltage = 3
-odrv.axis0.config.calibration_lockin.current = 10
+odrv.axis0.config.motor.current_soft_max = 7.24
+odrv.axis0.config.motor.current_hard_max = 8.24 #TODO ?????????????
+
+# Half the continuous current rating of the motor
+odrv.axis0.config.motor.calibration_current = 3.62
+odrv.axis0.config.calibration_lockin.current = 3.62
+
+# calib_max_voltage < 0.5 * vbus_voltage &&
+# calib_max_voltage > calibration_current * phase_resistance
+odrv.axis0.config.motor.resistance_calib_max_voltage = 10
 
 odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
 odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
@@ -32,8 +42,11 @@ odrv.axis0.controller.config.vel_limit_tolerance = 1.2
 #odrv.axis0.controller.config.spinout_mechanical_power_threshold = -9999
 
 # Brake Resistor
-odrv0.config.brake_resistor0.enable = False
-odrv0.config.brake_resistor0.resistance = 2
+odrv.config.brake_resistor0.enable = ENABLE_BRAKE_RESISTOR
+odrv.config.brake_resistor0.resistance = 2
+odrv.config.brake_resistor0.enable_dc_bus_voltage_feedback = True
+odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_start = 40
+odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_end = 46
 
 odrv.axis0.config.torque_soft_min = -0.25
 odrv.axis0.config.torque_soft_max = 0.25

@@ -1,21 +1,32 @@
-# Odrive S1 config. For the neos v1.1 motors. Firmware 0.6.8
+# Odrive S1 config - Firmware 0.6.8
+# For the NEO V1.1 motor.
+# https://www.revrobotics.com/rev-21-1650/
 
 CAN_NODE_ID = 0
 CAN_BAUD_RATE = 1000000
+ENABLE_BRAKE_RESISTOR = True
 
 odrv = odrv0
 odrv.config.dc_bus_overvoltage_trip_level = 48
-odrv.config.dc_bus_undervoltage_trip_level = 11.1
-odrv.config.dc_max_positive_current = 50
+odrv.config.dc_bus_undervoltage_trip_level = 19.2
+odrv.config.dc_max_positive_current = 40
 odrv.config.dc_max_negative_current = -7
 odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
-odrv.axis0.config.motor.torque_constant = 0.01748414376321353
+
+# 8.27 / Motor KV (rpm/V)
+odrv.axis0.config.motor.torque_constant = 8.27 / 473
+
 odrv.axis0.config.motor.pole_pairs = 7
 odrv.axis0.config.motor.current_soft_max = 40
-odrv.axis0.config.motor.current_hard_max = 60
-odrv.axis0.config.motor.calibration_current = 10
-odrv.axis0.config.motor.resistance_calib_max_voltage = 2
-odrv.axis0.config.calibration_lockin.current = 10
+odrv.axis0.config.motor.current_hard_max = 41 #???? TODO (was 60?)
+
+# Half the continuous current rating of the motor
+odrv.axis0.config.motor.calibration_current = 20
+odrv.axis0.config.calibration_lockin.current = 20
+
+# calib_max_voltage < 0.5 * vbus_voltage &&
+# calib_max_voltage > calibration_current * phase_resistance
+odrv.axis0.config.motor.resistance_calib_max_voltage = 10
 
 odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
 odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
@@ -28,7 +39,7 @@ odrv.axis0.controller.config.spinout_electrical_power_threshold = 9999
 odrv.axis0.controller.config.spinout_mechanical_power_threshold = -9999
 
 # Brake Resistor
-odrv.config.brake_resistor0.enable = True
+odrv.config.brake_resistor0.enable = ENABLE_BRAKE_RESISTOR
 odrv.config.brake_resistor0.resistance = 2
 odrv.config.brake_resistor0.enable_dc_bus_voltage_feedback = True
 odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_start = 40
@@ -49,6 +60,8 @@ odrv.axis0.config.commutation_encoder = EncoderId.HALL_ENCODER0
 odrv.axis0.controller.config.vel_gain = 0.04
 odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
 # The '10' above being in Hz from encoder_bandwidth (1/100ms = 1/0.1s = 10Hz)
+
+odrv.can.config.protocol = Protocol.SIMPLE
 
 # Add can bus functionality
 # CAN node ID must be different for each device.

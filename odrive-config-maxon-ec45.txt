@@ -1,6 +1,6 @@
 # Odrive S1 config - Firmware 0.6.8
-# For the Maxon EC frameless 45 flat motor.
-# https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecframeless/EC45Frameless/548270
+# For the Maxon EC 45 flat motor.
+# https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecflat/ecflat45/591480?etcc_cu=onsite&etcc_med=Header%20Suche&etcc_cmp=mit%20Ergebnis&etcc_ctv=Layer&query=591480
 
 CAN_NODE_ID = 0
 CAN_BITRATE = 1000000
@@ -13,19 +13,19 @@ odrv.config.dc_max_positive_current = 40
 odrv.config.dc_max_negative_current = -7
 odrv.axis0.config.motor.motor_type = MotorType.GIMBAL
 
-odrv.axis0.config.motor.phase_resistance = 0.7
+odrv.axis0.config.motor.phase_resistance = 0.573
 odrv.axis0.config.motor.phase_resistance_valid = True
 
 # 8.27 / Motor KV (rpm/V)
-odrv.axis0.config.motor.torque_constant = 8.27 / 259
+odrv.axis0.config.motor.torque_constant = 8.27 / 236
 
 odrv.axis0.config.motor.pole_pairs = 8
-odrv.axis0.config.motor.current_soft_max = 3.22
-odrv.axis0.config.motor.current_hard_max = 4.22 #TODO ???????
+odrv.axis0.config.motor.current_soft_max = 3.96
+odrv.axis0.config.motor.current_hard_max = 4.96 #TODO ???????????
 
 # Half the continuous current rating of the motor
-odrv.axis0.config.motor.calibration_current = 1.61
-odrv.axis0.config.calibration_lockin.current = 1.61
+odrv.axis0.config.motor.calibration_current = 1.98
+odrv.axis0.config.calibration_lockin.current = 1.98
 
 # calib_max_voltage < 0.5 * vbus_voltage &&
 # calib_max_voltage > calibration_current * phase_resistance
