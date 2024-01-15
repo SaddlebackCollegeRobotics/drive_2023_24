@@ -10,6 +10,10 @@ odrv.config.dc_max_positive_current = 30
 odrv.config.dc_max_negative_current = -30
 odrv.axis0.config.motor.motor_type = MotorType.GIMBAL
 
+# TODO - find phase resistance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#odrv.axis0.config.motor.phase_resistance = 0.293
+#odrv.axis0.config.motor.phase_resistance_valid = True
+
 odrv.axis0.config.motor.torque_constant = 0.031930501930501926
 odrv.axis0.config.motor.pole_pairs = 8
 odrv.axis0.config.motor.current_soft_max = 30
