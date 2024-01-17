@@ -37,21 +37,6 @@ class MinimalPublisher(Node):
         
         self._manager.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
 
-        # self.watchdog_thread = Thread(target=self.feed_watchdog_loop, args=(self._manager,))
-        # self.watchdog_thread.loop = True
-
-        # self.watchdog_thread.start()
-
-    # def signalHandler(self, signal, frame):
-    #     self.watchdog_thread.loop = False
-    #     self.watchdog_thread.join()
-    #     exit(0)
-
-    # def feed_watchdog_loop(self, manager: MotorControllerManager):
-    #     while getattr(thread, "loop", True):
-    #         manager.feed_watchdog_all()
-    #         sleep(0.5)
-
     def control_input_callback(self, msg: Float64MultiArray):
 
         norm_vel_left, norm_vel_right = msg.data[0], msg.data[1]
