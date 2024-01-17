@@ -6,16 +6,18 @@ from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError
 from enum import IntEnum
 from numpy import clip
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Any
 
-# TODO: Better logging system.
+# TODO: Improved logging system.
 
 class MotorControllerManager:
+
+    _motor_controllers: dict[str, "MotorController"]
     
     def __init__(self, can_interface: "ODriveCanInterface") -> None:
 
         # Key: node id, Value: MotorController
-        self._motor_controllers: dict[str, MotorController] = {}
+        self._motor_controllers = {}
         self._can_interface = can_interface
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float):
@@ -57,9 +59,19 @@ class MotorControllerManager:
     # Dunder methods as wrappers
     
     def __getitem__(self, key: str) -> "MotorController":
+        """Accesses motor controller by specified name (key).
+
+        Args:
+            key (str): Name of the motor controller as assigned by `get_motor_controller(...)`.
+
+        Returns:
+            MotorController: Motor controller instance to be used.
+        """
         return self.get_motor_controller(key)
     
-    def __len__(self):
+    def __len__(self) -> int:
+        """Returns number of motor controllers being handled.
+        """
         return self.count()
 
 
@@ -108,7 +120,7 @@ class ODriveCanInterface():
         # Flush CAN RX buffer so there are no more old pending messages
         while not (self.bus.recv(timeout=0) is None): pass
 
-    def _assert_version(self, node_id):
+    def _assert_version(self, node_id: int) -> None:
         # Flush CAN RX buffer so there are no more old pending messages
         self.flush_rx_buffer()
 
@@ -123,41 +135,39 @@ class ODriveCanInterface():
         assert self.endpoint_data['hw_version'] == f"{hw_product_line}.{hw_version}.{hw_variant}"
 
 
-    def _unpack_can_reply(self, return_types: str, msg):
+    def _unpack_can_reply(self, return_types: str, msg: bytearray) -> tuple:
         return struct.unpack(return_types, msg.data)
 
 
-    def _await_can_reply(self, node_id, command_id, timeout = 5.0):
+    def _await_can_reply(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", timeout: float = 5.0) -> can.Message | None:
 
         initial_time = time()
         for msg in self.bus: # FIXME: Improper check for timeout
-
-            if msg.arbitration_id == (node_id<< 5 | command_id):
+            if msg.arbitration_id == (node_id << 5 | command_id):
                 return msg 
             if time() - initial_time > timeout:
-                raise Exception(f"Timeout waiting for CAN reply for command {command_id}")
+                print(f"Timeout waiting for CAN reply for command {ODriveCanInterface.COMMAND(command_id).name}")
+                return None
 
-    def send_can_message(self, node_id, command_id, input_types = None, *input_data):
-
+    def send_can_message(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", input_types: str = "", *input_data: Any) -> None:
         self.bus.send(can.Message(
                 arbitration_id = (node_id << 5 | command_id),
                 data = struct.pack(input_types, *input_data) if input_types else b'',
                 is_extended_id = False
         ))
 
-    def _get_endpoint_info(self, path: str):
-        
+    def _get_endpoint_info(self, path: str) -> tuple[int, str]:
         endpoint_id = self.endpoints[path]['id']
         endpoint_type = self.endpoints[path]['type']
 
         return endpoint_id, endpoint_type
     
-    def write_param(self, node_id, path, value):
+    def write_param(self, node_id: int, path: str, value: Any) -> None:
         endpoint_id, endpoint_type = self._get_endpoint_info(path)
 
         self.send_can_message(node_id, ODriveCanInterface.COMMAND.RX_SDO, '<BHB' + self.format_lookup[endpoint_type], self.OPCODE_WRITE, endpoint_id, 0, value)
 
-    def read_param(self, node_id, path):
+    def read_param(self, node_id: int, path: str) -> Any:
         endpoint_id, endpoint_type = self._get_endpoint_info(path)
 
         self.flush_rx_buffer()
@@ -194,18 +204,18 @@ class ODriveCanInterface():
 
 class MotorController():
     
-    def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float):
+    def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float) -> None:
 
         self._can_interface = can_interface
         self._node_id: int = node_id
         self._max_speed = max_speed
         self._input_vel = 0.0
 
-    def set_velocity(self, vel: float, torque_feedforward: float = 0.0):
+    def set_velocity(self, vel: float, torque_feedforward: float = 0.0) -> None:
         self._input_vel = float(clip(vel, -self._max_speed, self._max_speed))
         self._can_interface.send_can_message(self._node_id, ODriveCanInterface.COMMAND.SET_INPUT_VEL, '<ff', vel, torque_feedforward)
 
-    def set_normalized_velocity(self, normalized_analog_input: float):
+    def set_normalized_velocity(self, normalized_analog_input: float) -> None:
         """Sets motor velocity based on a normalized value and max speed.
 
         Args:
@@ -213,14 +223,14 @@ class MotorController():
         """
         self.set_velocity(normalized_analog_input * self._max_speed)
 
-    def set_max_speed(self, max_speed: float):
+    def set_max_speed(self, max_speed: float) -> None:
         self._max_speed = abs(max_speed)
 
-    def change_max_speed(self, delta: float):
+    def change_max_speed(self, delta: float) -> None:
         new_speed = self._max_speed + delta
         self.set_max_speed(new_speed)
 
-    def set_axis_state(self, axis_state: AxisState):
+    def set_axis_state(self, axis_state: AxisState) -> None:
         print(f"Setting axis state to {axis_state.name}")
 
         self._can_interface.flush_rx_buffer()
