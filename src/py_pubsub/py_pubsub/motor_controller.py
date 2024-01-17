@@ -13,25 +13,57 @@ from typing import Callable, Any
 class MotorControllerManager:
 
     _motor_controllers: dict[str, "MotorController"]
+    _can_interface: "ODriveCanInterface"
     
     def __init__(self, can_interface: "ODriveCanInterface") -> None:
+        """Class for managing a group of ODrive motor controllers.
 
+        Args:
+            can_interface (ODriveCanInterface): A can interface instance for lower-level calls.
+        
+        Examples:
+            Basic manager example for a two-wheeled robot, with can node ids of [0, 1]:
+            Instantiate a manager with an associated can interface.
+            Add each of the two motor controllers to be managed.
+            Set the axis state of all motor controllers to `CLOSED_LOOP_CONTROL`.
+            Set the velocity of the left and right motors to 3 and 5 respectively.
+
+            >>> man = MotorControllerManager(ODriveCanInterface())
+            >>> man.add_motor_controller("left_wheel", 0, max_speed=10.0)
+            >>> man.add_motor_controller("right_wheel", 0, max_speed=5.0)
+            >>> man.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
+            >>> man["left_wheel"].set_velocity(3)
+            >>> man["right_wheel"].set_velocity(5)
+        """
         # Key: node id, Value: MotorController
         self._motor_controllers = {}
         self._can_interface = can_interface
 
-    def add_motor_controller(self, name: str, node_id: int, max_speed: float):
+    def add_motor_controller(self, name: str, node_id: int, max_speed: float) -> None:
         if name not in self._motor_controllers:
             self._motor_controllers[name] = MotorController(self._can_interface, node_id, max_speed)
         else:
             raise Exception(f"Motor controller with name {name} already exists")
         
-    def get_motor_controller(self, name: str):
+    def get_motor_controller(self, name: str) -> "MotorController":
         return self._motor_controllers[name]
 
-    def set_all(self, func: Callable, *args):
+    def for_each(self, func: Callable, *args) -> list | None:
+        """Calls a `MotorController` method for each managed controller.
+        `*args` must be provided if the specified method requires arguments.
+
+        Args:
+            func (Callable): Reference to a `MotorController` method
+
+        Returns:
+            list | None: List of return values of each function called. 
+        """
+        ret = []
         for motor_controller in self._motor_controllers.values():
-            func(motor_controller, *args)
+            if r := func(motor_controller, *args):
+                ret.append(r)
+        
+        return ret if ret else None
     
     # TODO: Refactor
     def set_axis_state_all(self, axis_state: AxisState):
@@ -53,7 +85,7 @@ class MotorControllerManager:
         for motor_controller in self._motor_controllers.values():
             motor_controller.feed_watchdog()
     
-    def count(self):
+    def count(self) -> int:
         return len(self._motor_controllers)
 
     # Dunder methods as wrappers
@@ -210,13 +242,26 @@ class MotorController():
     _input_vel: float
     
     def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float) -> None:
+        """Class to manage individual ODrive based motor contollers.
 
+        Args:
+            can_interface (ODriveCanInterface): A can interface instance for lower-level calls.
+            node_id (int): ID of the can node.
+            max_speed (float): Maximum speed to limit the motor controller to.
+                May also be accessed with the `max_speed` property.
+        """
         self._can_interface = can_interface
         self._node_id = node_id
         self._max_speed = max_speed
         self._input_vel = 0.0
 
     def set_velocity(self, vel: float, torque_feedforward: float = 0.0) -> None:
+        """Sets ODrive input velocity, limited within [-max_speed, max_speed].
+
+        Args:
+            vel (float): ODrive input_velocity.
+            torque_feedforward (float, optional): `torque_ff` value. Defaults to 0.0.
+        """
         self._input_vel = float(clip(vel, -self._max_speed, self._max_speed))
         self._can_interface.send_can_message(self._node_id, ODriveCanInterface.COMMAND.SET_INPUT_VEL, '<ff', vel, torque_feedforward)
 
@@ -238,12 +283,21 @@ class MotorController():
         self._max_speed = abs(value)
 
     def set_axis_state(self, axis_state: AxisState) -> None:
+        """Sets the axis state of the motor.
+
+        After access state setter is called, this method will await the next `heartbeat` message
+        from the motor. Based on this response, the operation will be deemed 
+        successful/unsucessful. Currently, this result is only logged to stdout.
+
+        Args:
+            axis_state (AxisState): Axis state to set the ODrive to.
+        """
         print(f"Setting axis state to {axis_state.name}")
 
         self._can_interface.flush_rx_buffer()
 
         # Clear errors (This also feeds the watchdog as a side effect)
-        self._can_interface.clear_errors(self._node_id)
+        self.clear_errors()
 
         self._can_interface.send_can_message(self._node_id, ODriveCanInterface.COMMAND.SET_AXIS_STATE, '<I', axis_state)
 
@@ -264,13 +318,12 @@ class MotorController():
                 print(f"Axis state set failed: {AxisError(error).name}")
                 print(f"Current axis state: {new_axis_state.name}")
     
-    def save_configuration(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'save_configuration')
-
-    def reboot(self) -> None:
-        self._can_interface.send_function_call(self._node_id, 'reboot')
-
     def get_errors(self) -> tuple[ODriveError, ODriveError]:
+        """Get ODrive errors.
+
+        Returns:
+            tuple[ODriveError, ODriveError]: `active_errors` and `disarm_reason`.
+        """
         errs = (
             ODriveError(self._can_interface.read_param(self._node_id, 'axis0.active_errors')),
             ODriveError(self._can_interface.read_param(self._node_id, 'axis0.disarm_reason'))
@@ -278,8 +331,21 @@ class MotorController():
         return errs
     
     def clear_errors(self) -> None:
+        """Clear ODrive errors.
+        """
         self._can_interface.send_function_call(self._node_id, 'clear_errors')
     
     def feed_watchdog(self) -> None:
+        """Feed watchdog.
+        """
         self._can_interface.send_function_call(self._node_id, 'axis0.watchdog_feed')
 
+    def save_configuration(self) -> None:
+        """Save ODrive configuration values.
+        """
+        self._can_interface.send_function_call(self._node_id, 'save_configuration')
+
+    def reboot(self) -> None:
+        """Request that ODrive reboots.
+        """
+        self._can_interface.send_function_call(self._node_id, 'reboot')
