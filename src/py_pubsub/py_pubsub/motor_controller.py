@@ -65,26 +65,6 @@ class MotorControllerManager:
         
         return ret if ret else None
     
-    # TODO: Refactor
-    def set_axis_state_all(self, axis_state: AxisState):
-        for motor_controller in self._motor_controllers.values():
-            motor_controller.set_axis_state(axis_state)
-
-    # TODO: Refactor
-    def set_input_vel_all(self, vel: float):
-        for motor_controller in self._motor_controllers.values():
-            motor_controller.set_velocity(vel)
-
-    # TODO: Refactor
-    def set_normalized_input_vel_all(self, normalized_analog_input: float):
-        for motor_controller in self._motor_controllers.values():
-            motor_controller.set_normalized_velocity(normalized_analog_input)
-
-    # TODO: Refactor
-    def feed_watchdog_all(self):
-        for motor_controller in self._motor_controllers.values():
-            motor_controller.feed_watchdog()
-    
     def count(self) -> int:
         return len(self._motor_controllers)
 
