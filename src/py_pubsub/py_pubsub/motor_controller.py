@@ -7,8 +7,10 @@ from enum import IntEnum
 from numpy import clip
 from pathlib import Path
 from typing import Callable, Any
+import logging
 
-# TODO: Improved logging system.
+# TODO: Integrate logging with ROS
+logger = logging.getLogger(__name__)
 
 class MotorControllerManager:
 
@@ -155,7 +157,7 @@ class ODriveCanInterface():
             if msg.arbitration_id == (node_id << 5 | command_id):
                 return msg 
             if time() - initial_time > timeout:
-                print(f"Timeout waiting for CAN reply for command {ODriveCanInterface.COMMAND(command_id).name}")
+                logger.error(f"Timeout waiting for CAN reply for command {ODriveCanInterface.COMMAND(command_id).name}")
                 return None
 
     def send_can_message(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", input_types: str = "", *input_data: Any) -> None:
@@ -269,7 +271,7 @@ class MotorController():
         Args:
             axis_state (AxisState): Axis state to set the ODrive to.
         """
-        print(f"Setting axis state to {axis_state.name}")
+        logger.debug(f"Setting axis state to {axis_state.name}")
 
         self._can_interface.flush_rx_buffer()
 
@@ -286,14 +288,14 @@ class MotorController():
 
             new_axis_state = AxisState(state) # FIXME: Will this ctor work if operation was unsuccessful? 
 
-            print(f"Axis state: {new_axis_state.name}")
+            logger.debug(f"Axis state: {new_axis_state.name}")
 
             if result == ProcedureResult.SUCCESS:
-                print(f"Axis state set successfully {new_axis_state.name}")
+                logger.debug(f"Axis state set successfully {new_axis_state.name}")
             else:
                 # Get disarm reason
-                print(f"Axis state set failed: {AxisError(error).name}")
-                print(f"Current axis state: {new_axis_state.name}")
+                logger.error(f"Axis state set failed: {AxisError(error).name}")
+                logger.error(f"Current axis state: {new_axis_state.name}")
     
     def get_errors(self) -> tuple[ODriveError, ODriveError]:
         """Get ODrive errors.
