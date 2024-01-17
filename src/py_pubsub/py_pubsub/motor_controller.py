@@ -1,7 +1,7 @@
 import json
 import can
 import struct
-from time import sleep, time
+from time import time
 from odrive.enums import AxisState, ProcedureResult, AxisError, ODriveError
 from enum import IntEnum
 from numpy import clip
@@ -15,11 +15,8 @@ class MotorControllerManager:
     _motor_controllers: dict[str, "MotorController"]
     _can_interface: "ODriveCanInterface"
     
-    def __init__(self, can_interface: "ODriveCanInterface") -> None:
+    def __init__(self) -> None:
         """Class for managing a group of ODrive motor controllers.
-
-        Args:
-            can_interface (ODriveCanInterface): A can interface instance for lower-level calls.
         
         Examples:
             Basic manager example for a two-wheeled robot, with can node ids of [0, 1]:
@@ -28,7 +25,7 @@ class MotorControllerManager:
             Set the axis state of all motor controllers to `CLOSED_LOOP_CONTROL`.
             Set the velocity of the left and right motors to 3 and 5 respectively.
 
-            >>> man = MotorControllerManager(ODriveCanInterface())
+            >>> man = MotorControllerManager()
             >>> man.add_motor_controller("left_wheel", 0, max_speed=10.0)
             >>> man.add_motor_controller("right_wheel", 0, max_speed=5.0)
             >>> man.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
@@ -37,7 +34,7 @@ class MotorControllerManager:
         """
         # Key: node id, Value: MotorController
         self._motor_controllers = {}
-        self._can_interface = can_interface
+        self._can_interface = ODriveCanInterface()
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float) -> None:
         if name not in self._motor_controllers:
