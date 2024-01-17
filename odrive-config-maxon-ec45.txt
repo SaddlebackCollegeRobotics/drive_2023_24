@@ -7,21 +7,24 @@ CAN_BITRATE = 1000000
 ENABLE_BRAKE_RESISTOR = False
 
 odrv = odrv0
-odrv.config.dc_bus_overvoltage_trip_level = 48
+odrv.config.dc_bus_overvoltage_trip_level = 30
 odrv.config.dc_bus_undervoltage_trip_level = 19.2
 odrv.config.dc_max_positive_current = 40
 odrv.config.dc_max_negative_current = -7
-odrv.axis0.config.motor.motor_type = MotorType.GIMBAL
+odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
 
-odrv.axis0.config.motor.phase_resistance = 0.573
+odrv.axis0.config.motor.phase_resistance = 0.573 # Ohm
 odrv.axis0.config.motor.phase_resistance_valid = True
+
+odrv.axis0.config.motor.phase_inductance = 0.301 / 1000 # Henry
+odrv.axis0.config.motor.phase_inductance_valid = True
 
 # 8.27 / Motor KV (rpm/V)
 odrv.axis0.config.motor.torque_constant = 8.27 / 236
 
 odrv.axis0.config.motor.pole_pairs = 8
 odrv.axis0.config.motor.current_soft_max = 3.96
-odrv.axis0.config.motor.current_hard_max = 4.96 #TODO ???????????
+odrv.axis0.config.motor.current_hard_max = 6
 
 # Half the continuous current rating of the motor
 odrv.axis0.config.motor.calibration_current = 1.98
