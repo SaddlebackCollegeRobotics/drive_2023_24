@@ -292,10 +292,11 @@ class MotorController():
 
             if result == ProcedureResult.SUCCESS:
                 logger.debug(f"Axis state set successfully {new_axis_state.name}")
-            else:
-                # Get disarm reason
-                logger.error(f"Axis state set failed: {AxisError(error).name}")
-                logger.error(f"Current axis state: {new_axis_state.name}")
+                return
+            
+        # Get disarm reason
+        logger.error(f"Axis state set failed: {AxisError(error).name}")
+        logger.error(f"Current axis state: {new_axis_state.name}")
     
     def get_errors(self) -> tuple[ODriveError, ODriveError]:
         """Get ODrive errors.

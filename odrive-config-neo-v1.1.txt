@@ -2,7 +2,7 @@
 # For the NEO V1.1 motor.
 # https://www.revrobotics.com/rev-21-1650/
 
-CAN_NODE_ID = 0
+CAN_NODE_ID = 3
 CAN_BAUD_RATE = 1000000
 ENABLE_BRAKE_RESISTOR = True
 
@@ -26,7 +26,7 @@ odrv.axis0.config.calibration_lockin.current = 20
 
 # calib_max_voltage < 0.5 * vbus_voltage &&
 # calib_max_voltage > calibration_current * phase_resistance
-odrv.axis0.config.motor.resistance_calib_max_voltage = 10
+odrv.axis0.config.motor.resistance_calib_max_voltage = 5
 
 odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
 odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
