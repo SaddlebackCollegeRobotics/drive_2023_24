@@ -230,7 +230,7 @@ class MotorController():
 
     @property
     def max_speed(self) -> float:
-        """I'm the 'x' property."""
+        """Max speed of the motor controller (in BOTH +/- directions)."""
         return self._max_speed
 
     @max_speed.setter
