@@ -206,9 +206,9 @@ class ODriveCanInterface():
         Returns:
             tuple[int, int, int, int]: Resulting data from heartbeat.
         """
-        msg = self._can_interface._await_can_reply(node_id, ODriveCanInterface.COMMAND.HEARTBEAT) # FIXME: May pick up previous
+        msg = self._await_can_reply(node_id, ODriveCanInterface.COMMAND.HEARTBEAT) # FIXME: May pick up previous
         msg.data = msg.data[:7] # Remove unused bytes
-        error, state, result, traj_done = self._can_interface._unpack_can_reply('<IBBB', msg)
+        error, state, result, traj_done = self._unpack_can_reply('<IBBB', msg)
 
         return error, state, result, traj_done
 
@@ -280,14 +280,14 @@ class MotorController():
 
         self._can_interface.send_can_message(self._node_id, ODriveCanInterface.COMMAND.SET_AXIS_STATE, '<I', axis_state)
 
+        result = ProcedureResult.BUSY
         while result == ProcedureResult.BUSY:
 
-            self._can_interface.feed_watchdog(self._node_id) # Feed watchdog while waiting for axis to be set
+            self.feed_watchdog() # Feed watchdog while waiting for axis to be set
 
             error, state, result, _ = self._can_interface.get_heartbeat(self._node_id)
 
-            new_axis_state = AxisState(state) # FIXME: Will this ctor work if operation was unsuccessful? 
-
+            new_axis_state = AxisState(state)
             logger.debug(f"Axis state: {new_axis_state.name}")
 
             if result == ProcedureResult.SUCCESS:

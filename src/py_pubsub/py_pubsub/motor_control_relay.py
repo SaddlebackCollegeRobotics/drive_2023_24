@@ -27,7 +27,7 @@ class MinimalPublisher(Node):
         self._max_speed = 30
 
 
-        self._manager = MotorControllerManager(can_interface=ODriveCanInterface())
+        self._manager = MotorControllerManager()
         
         # TODO: Check ordering
         self._manager.add_motor_controller('front_left', 0, self._max_speed)

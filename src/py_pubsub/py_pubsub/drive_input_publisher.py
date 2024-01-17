@@ -21,7 +21,7 @@ class DriveInputPublisher(Node):
         self.control_publisher = self.create_publisher(Float64MultiArray, '/control/drive_control_input', 10)
         self.msg = Float64MultiArray()
 
-        self._controller_manager = ControllerManager(ControllerScheme.BASIC)
+        self._controller_manager = ControllerManager(ControllerScheme.TRIGGER_BASED)
 
         self.timer = self.create_timer(self.PUBLISHER_PERIOD, self.timer_callback)
 
