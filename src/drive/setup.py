@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-package_name = 'py_pubsub'
+package_name = 'drive'
 
 setup(
     name=package_name,
@@ -20,8 +20,8 @@ setup(
     #     # Include launch files
     #     ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
     #     # Include ODrive interface
-    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/commands.json']),
-    #     ('share/' + package_name, ['py_pubsub/can_manager/odrive_interface/flat_endpoints.json']),
+    #     ('share/' + package_name, ['drive/can_manager/odrive_interface/commands.json']),
+    #     ('share/' + package_name, ['drive/can_manager/odrive_interface/flat_endpoints.json']),
     # ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -32,8 +32,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'motor_control_relay = py_pubsub.motor_control_relay:main',
-            'drive_control_input = py_pubsub.drive_input_publisher:main',
+            'motor_control_relay = drive.motor_control_relay:main',
+            'control_input = drive.input_publisher:main',
         ],
     },
 )
