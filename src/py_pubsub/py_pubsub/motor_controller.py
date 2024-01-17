@@ -203,11 +203,16 @@ class ODriveCanInterface():
 
 
 class MotorController():
+
+    _can_interface: ODriveCanInterface
+    _node_id: int
+    _max_speed: float
+    _input_vel: float
     
     def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float) -> None:
 
         self._can_interface = can_interface
-        self._node_id: int = node_id
+        self._node_id = node_id
         self._max_speed = max_speed
         self._input_vel = 0.0
 
@@ -223,12 +228,14 @@ class MotorController():
         """
         self.set_velocity(normalized_analog_input * self._max_speed)
 
-    def set_max_speed(self, max_speed: float) -> None:
-        self._max_speed = abs(max_speed)
+    @property
+    def max_speed(self) -> float:
+        """I'm the 'x' property."""
+        return self._max_speed
 
-    def change_max_speed(self, delta: float) -> None:
-        new_speed = self._max_speed + delta
-        self.set_max_speed(new_speed)
+    @max_speed.setter
+    def max_speed(self, value: float) -> None:
+        self._max_speed = abs(value)
 
     def set_axis_state(self, axis_state: AxisState) -> None:
         print(f"Setting axis state to {axis_state.name}")
