@@ -20,14 +20,14 @@ class MinimalPublisher(Node):
         # Signal handler for Ctrl+C
         # signal(SIGINT, self.signalHandler)
 
-        self.control_input_subscriber = self.create_subscription(Float64MultiArray, '/control/drive_control_input', self.control_input_callback, 10)
+        self.control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
 
         # Set up motor controllers ---------------------------------------
 
         self._max_speed = 30
 
 
-        self._manager = MotorControllerManager(can_interface=ODriveCanInterface())
+        self._manager = MotorControllerManager()
         
         # TODO: Check ordering
         self._manager.add_motor_controller('front_left', 0, self._max_speed)

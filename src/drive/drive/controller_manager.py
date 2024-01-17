@@ -179,7 +179,7 @@ if __name__ == '__main__':
     from time import sleep
     import os
     manager = ControllerManager(config_path = \
-                                'src/py_pubsub/config/gamepads.config')
+                                'src/drive/config/gamepads.config')
     schemes_list = list(map(lambda x: x.name.lower(), ControllerScheme))
     test_scheme = input(f'Enter an input scheme to test {schemes_list}: ')
     if test_scheme.lower() in schemes_list:

@@ -1,11 +1,11 @@
 launch:
 
 - node:
-    pkg: "py_pubsub"
+    pkg: "drive"
     exec: "drive_control_input"
 
 - node:
-    pkg: "py_pubsub"
+    pkg: "drive"
     exec: "motor_control_relay"
 
 - node:
