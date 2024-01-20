@@ -8,6 +8,8 @@ from numpy import clip
 from pathlib import Path
 from typing import Callable, Any
 import logging
+import ifcfg
+import subprocess
 
 # TODO: Integrate logging with ROS
 logger = logging.getLogger(__name__)
@@ -110,9 +112,12 @@ class ODriveCanInterface():
             self.endpoint_data = json.load(f)
             self.endpoints = self.endpoint_data['endpoints']
 
+        
+        self._configure_bus_network(interface_name=interface)
+
         # Odrive CAN node ID
-        # self.bus = can.interface.Bus(interface='virtual')# interface, bustype='socketcan',)
         self.bus = can.interface.Bus(interface, bustype='socketcan',)
+
 
         # See https://docs.python.org/3/library/struct.html#format-characters
         self.format_lookup = {
@@ -126,6 +131,23 @@ class ODriveCanInterface():
     
     def __del__(self) -> None:
         self.bus.shutdown()
+    
+    def _configure_bus_network(self, interface_name: str, bitrate: int = 1000000):
+        interface = ifcfg.interfaces().get(interface_name)
+    
+        if interface is None:
+            print(f'Interface {interface_name} not found')
+            exit(0)
+
+        if 'UP' in interface.get('flags'):
+            print(f'Interface {interface_name} is already up')
+        else:
+            
+            subprocess.run(["sudo", "ip", "link", "set",
+                            interface_name, "up", "type", "can",
+                            "bitrate", str(bitrate)])
+            
+            print(f'Started interface {interface_name}')
 
     def flush_rx_buffer(self) -> None:
         # Flush CAN RX buffer so there are no more old pending messages
