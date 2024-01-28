@@ -328,3 +328,21 @@ class MotorController():
         """Request that ODrive reboots.
         """
         self._can_interface.send_function_call(self._node_id, 'reboot')
+    
+    def get_encoder_est(self) -> (float, float):
+        """Get ODrive current position and velocity estimates for feedback.
+
+        Returns:
+            Pos_Estimate (float32): Position feedback estimate
+            Vel_Estimate (float32): Velocity feedback estimate
+        """
+        pos_est: float = self._can_interface.read_param(
+                self._node_id,
+                'axis0.pos_vel_mapper.pos_rel'
+            )
+        vel_est: float = self._can_interface.read_param(
+                self._node_id,
+                'axis0.pos_vel_mapper.pos_rel'
+            )
+        
+        return pos_est, vel_est
