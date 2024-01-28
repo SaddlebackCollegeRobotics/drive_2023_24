@@ -64,6 +64,8 @@ class MinimalPublisher(Node):
         for motor_feedback_tuple in feedback:
             self._feedback_msg.data += list(motor_feedback_tuple)
         
+        print(f'Feedback: {self._feedback_msg.data}')
+        
         self._feedback_publisher.publish(self._feedback_msg)
 
 
