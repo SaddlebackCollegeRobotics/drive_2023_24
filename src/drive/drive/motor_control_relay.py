@@ -2,13 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from .motor_controller import MotorControllerManager, ODriveCanInterface, MotorController
+from .motor_controller import MotorControllerManager, MotorController
 from odrive.enums import AxisState
-
-from time import sleep
-from threading import Thread
-from signal import signal, SIGINT
-
 
 class MinimalPublisher(Node):
 
