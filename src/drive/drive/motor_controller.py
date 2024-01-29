@@ -365,7 +365,7 @@ class MotorController():
             )
         vel_est: float = self._can_interface.read_param(
                 self._node_id,
-                'axis0.pos_vel_mapper.pos_rel'
+                'axis0.pos_vel_mapper.vel'
             )
         
         return pos_est, vel_est

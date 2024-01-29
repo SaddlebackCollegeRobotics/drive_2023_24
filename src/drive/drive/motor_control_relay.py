@@ -31,11 +31,12 @@ class MinimalPublisher(Node):
         self._manager.add_motor_controller('front_right', 3, self._max_speed)
         
         self._manager.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
+        print("Errors: ", self._manager.for_each(MotorController.get_errors))
 
         # Create publisher for motor feedback (position/velocity)
-        self._feedback_publisher = self.create_(Float64MultiArray, '/drive/feedback', 10)
+        self._feedback_publisher = self.create_publisher(Float64MultiArray, '/drive/feedback', 1)
         self._feedback_msg = Float64MultiArray() # [pos1, vel1, pos2, vel2, ...]
-        self.create_timer(1/10, self.feedback_callback)
+        self.create_timer(1, self.feedback_callback)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
@@ -43,7 +44,6 @@ class MinimalPublisher(Node):
         
         if abs(norm_vel_left) > 1 or abs(norm_vel_right) > 1:
             raise ValueError
-
         self._manager['front_left'].set_normalized_velocity(-norm_vel_left)
         self._manager['back_left'].set_normalized_velocity(-norm_vel_left)
         self._manager['front_right'].set_normalized_velocity(norm_vel_right)
@@ -52,15 +52,16 @@ class MinimalPublisher(Node):
     def feedback_callback(self):
         # FIXME: The current method of reading parameters is very inefficient
         # Each parameter request will clear current pending msgs, meaning each one must wait
-        # for the next cycle.
+        # for the next cycle. (may be ~800ms)
 
         feedback = self._manager.for_each(MotorController.get_encoder_est)
-        self._feedback_msg.data.clear()
+        msg_data = []
         for motor_feedback_tuple in feedback:
-            self._feedback_msg.data += list(motor_feedback_tuple)
+            msg_data += list(motor_feedback_tuple)
         
-        print(f'Feedback: {self._feedback_msg.data}')
+        print(f'Feedback:\n\tpos: {msg_data[::2]}\n\tvel: {msg_data[1::2]}')
         
+        self._feedback_msg.data = msg_data
         self._feedback_publisher.publish(self._feedback_msg)
 
 
