@@ -90,6 +90,7 @@ class MotorControllerManager:
 
 class ODriveCanInterface():
 
+    _registered_events: dict
 
     OPCODE_READ = 0x00
     OPCODE_WRITE = 0x01
@@ -117,6 +118,7 @@ class ODriveCanInterface():
 
         # Odrive CAN node ID
         self.bus = can.interface.Bus(interface, bustype='socketcan',)
+        # FIXME: Use ThreadSafeBus!
 
 
         # See https://docs.python.org/3/library/struct.html#format-characters
@@ -128,9 +130,28 @@ class ODriveCanInterface():
             'uint64': 'Q', 'int64': 'q',
             'float': 'f'
         }
+
+        self._event_loop_running = True
+        self._event_loop_thread = None # TODO: Create event loop thread
+        self._registered_events = {}
     
     def __del__(self) -> None:
         self.bus.shutdown()
+
+    def _event_loop(self):
+        """Manages registered events calling respective registered functions when events occur.
+
+        Is a BLOCKING function. Will automatically be called in interface constructor.
+        """
+        # FEAT: Allow actions to be preformed as well?
+        while self._event_loop_running:
+            if not (can_message := self.bus.recv()):
+                continue # Skip iteration if there's no msg
+            
+            # Use a thread lock to ensure registered events are not modified while iterating
+            with lockThing:
+                pass
+
     
     def _configure_bus_network(self, interface_name: str, bitrate: int = 1000000):
         interface = ifcfg.interfaces().get(interface_name)
