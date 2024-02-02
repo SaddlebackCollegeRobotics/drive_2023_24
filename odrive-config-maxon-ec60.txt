@@ -2,7 +2,7 @@
 # For the Maxon EC 60 flat motor.
 # https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecflat/ecflat60/625858?etcc_cu=onsite&etcc_med=Header%20Suche&etcc_cmp=mit%20Ergebnis&etcc_ctv=Layer&query=625858
 
-CAN_NODE_ID = 0
+CAN_NODE_ID = 5
 CAN_BITRATE = 1000000
 ENABLE_BRAKE_RESISTOR = False
 

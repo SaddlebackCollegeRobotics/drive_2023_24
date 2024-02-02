@@ -8,7 +8,9 @@ ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{ax
 ros2 service call /odrive_axis0/request_axis_state odrive_can/srv/AxisState "{axis_requested_state: 1}"
 
 # ~~Start up can0 ifconfig interface~~
-# ^-- Done through python can interface
+# Done automatically through python can interface.
+# To manually start up interface:
+sudo ip link set can0 up type can bitrate 1000000
 
 # Test for can messages
 candump can0 -xct z -n 10

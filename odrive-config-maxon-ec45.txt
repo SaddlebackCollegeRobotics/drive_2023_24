@@ -64,7 +64,7 @@ odrv.axis0.config.load_encoder = EncoderId.HALL_ENCODER0
 odrv.axis0.config.commutation_encoder = EncoderId.HALL_ENCODER0
 
 # PID Loop
-odrv.axis0.controller.config.vel_gain = 0.04
+odrv.axis0.controller.config.vel_gain = 0.01
 odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
 # The '10' above being in Hz from encoder_bandwidth (1/100ms = 1/0.1s = 10Hz)
 
