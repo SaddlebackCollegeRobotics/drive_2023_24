@@ -51,6 +51,7 @@ odrv.config.brake_resistor0.enable_dc_bus_voltage_feedback = True
 odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_start = 40
 odrv.config.brake_resistor0.dc_bus_voltage_feedback_ramp_end = 46
 
+# TODO - Adjust this
 odrv.axis0.config.torque_soft_min = -0.25
 odrv.axis0.config.torque_soft_max = 0.25
 
@@ -63,8 +64,9 @@ odrv.axis0.config.load_encoder = EncoderId.HALL_ENCODER0
 odrv.axis0.config.commutation_encoder = EncoderId.HALL_ENCODER0
 
 # PID Loop
-odrv.axis0.controller.config.vel_gain = 0.04
-odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
+odrv.axis0.controller.config.vel_gain = 0.01
+#odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
+odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * 0.09
 # The '10' above being in Hz from encoder_bandwidth (1/100ms = 1/0.1s = 10Hz)
 
 odrv.can.config.protocol = Protocol.SIMPLE
