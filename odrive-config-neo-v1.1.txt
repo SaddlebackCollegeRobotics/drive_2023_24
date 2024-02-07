@@ -2,7 +2,7 @@
 # For the NEO V1.1 motor.
 # https://www.revrobotics.com/rev-21-1650/
 
-CAN_NODE_ID = 12
+CAN_NODE_ID = 5
 CAN_BAUD_RATE = 1000000
 ENABLE_BRAKE_RESISTOR = True
 
