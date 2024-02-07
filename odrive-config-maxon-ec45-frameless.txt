@@ -2,7 +2,7 @@
 # For the Maxon EC frameless 45 flat motor.
 # https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecframeless/EC45Frameless/548270
 
-CAN_NODE_ID = 7
+CAN_NODE_ID = 11
 CAN_BITRATE = 1000000
 ENABLE_BRAKE_RESISTOR = False
 
