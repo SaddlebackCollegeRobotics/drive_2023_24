@@ -9,7 +9,7 @@ class MotorControllerManager:
     _motor_controllers: dict[str, MotorController]
     _can_interface: ODriveCanInterface
     
-    def __init__(self, interface, endpoint_lookup_file) -> None:
+    def __init__(self, interface, endpoint_lookup_file, bitrate) -> None:
         """Class for managing a group of ODrive motor controllers.
         
         Examples:
@@ -28,7 +28,7 @@ class MotorControllerManager:
         """
         # Key: node id, Value: MotorController
         self._motor_controllers = {}
-        self._can_interface = ODriveCanInterface(interface, endpoint_lookup_file)
+        self._can_interface = ODriveCanInterface(interface, endpoint_lookup_file, bitrate)
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float) -> None:
         if name not in self._motor_controllers:

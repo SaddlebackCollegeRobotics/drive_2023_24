@@ -21,7 +21,7 @@ class MotorControlRelay(Node):
 
         can_enpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
 
-        self._manager = MotorControllerManager('can0', can_enpoints_file)
+        self._manager = MotorControllerManager('can0', can_enpoints_file, 1000000)
         
         self._manager.add_motor_controller('front_left', 0, self._max_speed)
         self._manager.add_motor_controller('back_left', 1, self._max_speed)

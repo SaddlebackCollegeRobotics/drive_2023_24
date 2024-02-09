@@ -35,6 +35,7 @@ setup(
         'console_scripts': [
             'motor_control_relay = drive.motor_control_relay:main',
             'control_input = drive.input_publisher:main',
+            'test_config = drive.odrive_can_test:main',
         ],
     },
 )

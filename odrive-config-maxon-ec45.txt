@@ -2,7 +2,7 @@
 # For the Maxon EC 45 flat motor.
 # https://www.maxongroup.com/maxon/view/product/motor/ecmotor/ecflat/ecflat45/591480?etcc_cu=onsite&etcc_med=Header%20Suche&etcc_cmp=mit%20Ergebnis&etcc_ctv=Layer&query=591480
 
-CAN_NODE_ID = 8
+CAN_NODE_ID = 9
 CAN_BITRATE = 1000000
 ENABLE_BRAKE_RESISTOR = False
 
