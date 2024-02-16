@@ -11,9 +11,11 @@ class MotorControlRelay(Node):
 
     def __init__(self):
 
+        self.get_clock().now().to_msg()
         super().__init__('motor_control_relay')
 
-        self.control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
+        self._control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
+        self._wheel_estimate_publisher = self.create_publisher(Float64MultiArray, '/drive/wheel_velocity_estimates', 10)
 
         # Set up motor controller intefaces
 
@@ -30,6 +32,8 @@ class MotorControlRelay(Node):
         
         # Set all motor controllers to closed loop control
         self._manager.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
+        self.VELOCITY_ESTIMATE_PERIOD = 1/20
+        self.timer = self.create_timer(self.VELOCITY_ESTIMATE_PERIOD, self.velocity_estimate_callback)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
@@ -40,9 +44,16 @@ class MotorControlRelay(Node):
         self._manager['front_right'].set_normalized_velocity(norm_vel_right)
         self._manager['back_right'].set_normalized_velocity(norm_vel_right)
 
-        pos_estimate, vel_estimate = self._manager['front_left'].get_encoder_estimates()
-        self.get_logger().info(f'Front Left Pos: {pos_estimate}')
-        self.get_logger().info(f'Front Left Vel: {vel_estimate}')       
+    def velocity_estimate_callback(self):
+        front_left_vel = self._manager['front_left'].get_encoder_estimates()[1]   
+        front_right_vel = self._manager['front_right'].get_encoder_estimates()[1]
+        back_left_vel = self._manager['back_left'].get_encoder_estimates()[1]
+        back_right_vel = self._manager['back_right'].get_encoder_estimates()[1]
+
+        left_vel_avg = (front_left_vel + back_left_vel) / 2
+        right_vel_avg = (front_right_vel + back_right_vel) / 2
+
+        self._wheel_estimate_publisher.publish(Float64MultiArray(data=[left_vel_avg, right_vel_avg]))
 
 
 def main(args=None):

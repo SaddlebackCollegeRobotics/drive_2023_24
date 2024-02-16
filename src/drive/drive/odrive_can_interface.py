@@ -38,7 +38,7 @@ class ODriveCanInterface():
                 self._configure_bus_network(interface, bitrate)
 
                 # Odrive CAN node ID
-                self.bus = can.interface.Bus(interface, bustype='socketcan',)
+                self.bus = can.ThreadSafeBus(interface, bustype='socketcan',)
 
 
                 # See https://docs.python.org/3/library/struct.html#format-characters

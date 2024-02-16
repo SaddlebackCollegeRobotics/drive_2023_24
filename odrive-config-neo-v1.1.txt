@@ -76,11 +76,11 @@ odrv.can.config.baud_rate = CAN_BAUD_RATE
 
 # Enable cyclical data to reach over CAN
 odrv.axis0.config.can.heartbeat_msg_rate_ms = 100
-odrv.axis0.config.can.encoder_msg_rate_ms = 100
-odrv.axis0.config.can.iq_msg_rate_ms = 100
-odrv.axis0.config.can.torques_msg_rate_ms = 100
-odrv.axis0.config.can.error_msg_rate_ms = 100
-odrv.axis0.config.can.temperature_msg_rate_ms = 100
-odrv.axis0.config.can.bus_voltage_msg_rate_ms = 100
+odrv.axis0.config.can.encoder_msg_rate_ms = 10
+odrv.axis0.config.can.iq_msg_rate_ms = 0
+odrv.axis0.config.can.torques_msg_rate_ms = 0
+odrv.axis0.config.can.error_msg_rate_ms = 0
+odrv.axis0.config.can.temperature_msg_rate_ms = 0
+odrv.axis0.config.can.bus_voltage_msg_rate_ms = 0
 
 odrv.save_configuration()
