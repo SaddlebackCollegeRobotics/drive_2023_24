@@ -24,7 +24,7 @@ class MotorController():
         self._max_speed = max_speed
         self._input_vel = 0.0
 
-        self._can_interface._assert_version(self._node_id)
+        # self._can_interface._assert_version(self._node_id)
 
     def set_velocity(self, vel: float, torque_feedforward: float = 0.0) -> None:
         """Sets ODrive input velocity, limited within [-max_speed, max_speed].
