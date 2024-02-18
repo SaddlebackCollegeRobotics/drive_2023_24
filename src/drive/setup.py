@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from glob import glob
 
 package_name = 'drive'
 
@@ -13,7 +14,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         # Include launch files
-        ('share/' + package_name + '/launch', ['launch/rover_drive_launch.yaml']),
+        ('share/' + package_name + '/launch', glob('launch/*.yaml')),
         ('share/' + package_name, [f'{package_name}/flat_endpoints.json']),
     ],
     #     # Include gamepad config file
