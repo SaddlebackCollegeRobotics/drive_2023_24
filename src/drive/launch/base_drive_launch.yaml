@@ -2,4 +2,4 @@ launch:
 
 - node:
     pkg: "drive"
-    exec: "motor_control_relay"
+    exec: "control_input"

@@ -1,0 +1,20 @@
+[Unit]
+Description=Runs ros2 launch file for drive_2023_24
+
+[Service]
+Type=simple
+# Restart=always
+User=root
+
+Environment="PYTHONPATH=$PYTHONPATH:/home/orin/odrive_can_interface/workspaces/drive_2023_24/install/drive/lib/python3.10/site-packages:/home/cameron/workspaces/drive_2023_24/install/odrive_can/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages:/home/cameron/.local/lib/python3.10/site-packages"
+Environment="ROS_VERSION=2"
+Environment="ROS_PYTHON_VERSION=3"
+Environment="LD_LIBRARY_PATH=/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib"
+Environment="PATH=/home/orin/.local/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+Environment="ROS_DISTRO=humble"
+Environment="AMENT_PREFIX_PATH=/home/orin/workspaces/drive_2023_24/install/drive:/opt/ros/humble"
+
+ExecStart=/bin/bash -c 'ros2 launch dual_drive_launch.yaml'
+
+[Install]
+WantedBy=multi-user.target

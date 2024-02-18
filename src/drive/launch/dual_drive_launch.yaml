@@ -1,0 +1,10 @@
+launch:
+
+- node:
+    pkg: "drive"
+    exec: "motor_control_relay"
+
+
+- node:
+    pkg: "drive"
+    exec: "control_input"
