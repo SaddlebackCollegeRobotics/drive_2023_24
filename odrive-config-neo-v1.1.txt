@@ -18,7 +18,7 @@ odrv.axis0.config.motor.torque_constant = 8.27 / 473
 
 odrv.axis0.config.motor.pole_pairs = 7
 odrv.axis0.config.motor.current_soft_max = 40
-odrv.axis0.config.motor.current_hard_max = 60
+odrv.axis0.config.motor.current_hard_max = 70
 
 # Half the continuous current rating of the motor
 odrv.axis0.config.motor.calibration_current = 20

@@ -38,7 +38,8 @@ class ODriveCanInterface():
                 self._configure_bus_network(interface, bitrate)
 
                 # Odrive CAN node ID
-                self.bus = can.ThreadSafeBus(interface, bustype='socketcan',)
+                self.bus = can.interface.Bus(interface, bustype='socketcan',)
+
 
                 # See https://docs.python.org/3/library/struct.html#format-characters
                 self.format_lookup = {
@@ -56,6 +57,7 @@ class ODriveCanInterface():
     def __del__(self) -> None:
         if self.bus != None:
             self.bus.shutdown()
+    
     def _configure_bus_network(self, interface_name: str, bitrate: int):
         interface = ifcfg.interfaces().get(interface_name)
     
@@ -95,6 +97,7 @@ class ODriveCanInterface():
     def _unpack_can_reply(self, return_types: str, msg: bytearray) -> tuple:
         return struct.unpack(return_types, msg.data)
 
+
     def _await_can_reply(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", timeout: float = 5.0) -> can.Message | None:
 
         initial_time = time()
@@ -104,7 +107,7 @@ class ODriveCanInterface():
             if time() - initial_time > timeout:
                 # logger.error(f"Timeout waiting for CAN reply for command {ODriveCanInterface.COMMAND(command_id).name}")
                 return None
-            
+
     def send_can_message(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", input_types: str = "", *input_data: Any) -> None:
         self.bus.send(can.Message(
                 arbitration_id = (node_id << 5 | command_id),
@@ -157,7 +160,7 @@ class ODriveCanInterface():
 
         return error, state, result, traj_done
     
-    def get_encoder_estimates(self, node_id: int) -> tuple[float, float] | None:
+    def get_encoder_estimates(self, node_id: int) -> tuple[float, float]:
         """Get ODrive encoder position and velocity estimates.
 
         Data returned is (pos_estimate: float32, vel_estimate: float32)
@@ -168,14 +171,8 @@ class ODriveCanInterface():
         Returns:
             tuple[float: pos_estimate, float: vel_estimate]
         """
-        # Need to convert this to work with callback from bus notifier
+        msg = self._await_can_reply(node_id, ODriveCanInterface.COMMAND.GET_ENCODER_ESTIMATES)
 
-        return None
-        # msg = self._await_can_reply(node_id, ODriveCanInterface.COMMAND.GET_ENCODER_ESTIMATES)
-        # # msg = self._try_get_next_can_message(node_id, ODriveCanInterface.COMMAND.GET_ENCODER_ESTIMATES)
+        pos_estimate, vel_estimate = self._unpack_can_reply('<ff', msg)
 
-        # if msg == None:
-        #     return None
-        
-        # pos_estimate, vel_estimate = self._unpack_can_reply('<ff', msg)
-        # return pos_estimate, vel_estimate
+        return pos_estimate, vel_estimate

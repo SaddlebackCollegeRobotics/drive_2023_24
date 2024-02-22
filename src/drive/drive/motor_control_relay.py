@@ -2,7 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from .motor_controller_manager import MotorControllerManager, MotorController
+from odrive_motor_controller import ODriveMotorController
+from odrive_motor_controller_manager import ODriveMotorControllerManager
 from odrive.enums import AxisState
 from ament_index_python.packages import get_package_share_directory
 
@@ -22,7 +23,7 @@ class MotorControlRelay(Node):
 
         can_enpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
 
-        self._manager = MotorControllerManager('can0', can_enpoints_file, 1000000)
+        self._manager = ODriveMotorControllerManager('can0', can_enpoints_file, 1000000)
         
         self._manager.add_motor_controller('front_left', 0, self._max_speed)
         self._manager.add_motor_controller('back_left', 1, self._max_speed)
@@ -30,7 +31,7 @@ class MotorControlRelay(Node):
         self._manager.add_motor_controller('front_right', 3, self._max_speed)
         
         # Set all motor controllers to closed loop control
-        self._manager.for_each(MotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
+        self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
         self.VELOCITY_ESTIMATE_PERIOD = 1/20
         # self.timer = self.create_timer(self.VELOCITY_ESTIMATE_PERIOD, self.velocity_estimate_callback)
 

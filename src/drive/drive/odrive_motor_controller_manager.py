@@ -1,12 +1,12 @@
 from typing import Callable
 
 from .odrive_can_interface import ODriveCanInterface
-from .motor_controller import MotorController
+from .odrive_motor_controller import ODriveMotorController
 
 
-class MotorControllerManager:
+class ODriveMotorControllerManager:
 
-    _motor_controllers: dict[str, MotorController]
+    _motor_controllers: dict[str, ODriveMotorController]
     _can_interface: ODriveCanInterface
     
     def __init__(self, interface, endpoint_lookup_file, bitrate) -> None:
@@ -32,11 +32,11 @@ class MotorControllerManager:
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float) -> None:
         if name not in self._motor_controllers:
-            self._motor_controllers[name] = MotorController(self._can_interface, node_id, max_speed)
+            self._motor_controllers[name] = ODriveMotorController(self._can_interface, node_id, max_speed)
         else:
             raise Exception(f"Motor controller with name {name} already exists")
         
-    def get_motor_controller(self, name: str) -> MotorController:
+    def get_motor_controller(self, name: str) -> ODriveMotorController:
         return self._motor_controllers[name]
 
     def for_each(self, func: Callable, *args) -> list | None:
@@ -61,7 +61,7 @@ class MotorControllerManager:
 
     # Dunder Method Wrappers --------------------------------------------------
     
-    def __getitem__(self, key: str) -> MotorController:
+    def __getitem__(self, key: str) -> ODriveMotorController:
         """Accesses motor controller by specified name (key).
 
         Args:
