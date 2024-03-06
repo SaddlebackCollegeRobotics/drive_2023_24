@@ -2,7 +2,7 @@
 # For the NEO V1.1 motor.
 # https://www.revrobotics.com/rev-21-1650/
 
-CAN_NODE_ID = 5
+CAN_NODE_ID = 6
 CAN_BAUD_RATE = 1000000
 ENABLE_BRAKE_RESISTOR = True
 
@@ -18,7 +18,7 @@ odrv.axis0.config.motor.torque_constant = 8.27 / 473
 
 odrv.axis0.config.motor.pole_pairs = 7
 odrv.axis0.config.motor.current_soft_max = 40
-odrv.axis0.config.motor.current_hard_max = 60
+odrv.axis0.config.motor.current_hard_max = 70
 
 # Half the continuous current rating of the motor
 odrv.axis0.config.motor.calibration_current = 20
@@ -75,12 +75,13 @@ odrv.axis0.config.can.node_id = CAN_NODE_ID
 odrv.can.config.baud_rate = CAN_BAUD_RATE
 
 # Enable cyclical data to reach over CAN
+odrv = odrv0
 odrv.axis0.config.can.heartbeat_msg_rate_ms = 100
-odrv.axis0.config.can.encoder_msg_rate_ms = 100
-odrv.axis0.config.can.iq_msg_rate_ms = 100
-odrv.axis0.config.can.torques_msg_rate_ms = 100
-odrv.axis0.config.can.error_msg_rate_ms = 100
-odrv.axis0.config.can.temperature_msg_rate_ms = 100
-odrv.axis0.config.can.bus_voltage_msg_rate_ms = 100
+odrv.axis0.config.can.encoder_msg_rate_ms = 10
+odrv.axis0.config.can.iq_msg_rate_ms = 0
+odrv.axis0.config.can.torques_msg_rate_ms = 0
+odrv.axis0.config.can.error_msg_rate_ms = 0
+odrv.axis0.config.can.temperature_msg_rate_ms = 0
+odrv.axis0.config.can.bus_voltage_msg_rate_ms = 0
 
 odrv.save_configuration()
