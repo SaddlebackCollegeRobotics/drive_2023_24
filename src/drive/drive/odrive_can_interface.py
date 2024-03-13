@@ -38,7 +38,7 @@ class ODriveCanInterface():
                 self._configure_bus_network(interface, bitrate)
 
                 # Odrive CAN node ID
-                self.bus = can.interface.Bus(interface, bustype='socketcan',)
+                self.bus = can.ThreadSafeBus(interface, bustype='socketcan',)
 
 
                 # See https://docs.python.org/3/library/struct.html#format-characters
@@ -109,6 +109,10 @@ class ODriveCanInterface():
                 return None
 
     def send_can_message(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", input_types: str = "", *input_data: Any) -> None:
+        
+        # TODO - Put this on separate thread loop rather than in this func
+        self.flush_rx_buffer()
+        
         self.bus.send(can.Message(
                 arbitration_id = (node_id << 5 | command_id),
                 data = struct.pack(input_types, *input_data) if input_types else b'',
