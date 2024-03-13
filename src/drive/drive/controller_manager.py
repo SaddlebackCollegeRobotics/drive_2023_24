@@ -121,6 +121,10 @@ class ControllerManager:
         ls_x, ls_y, rs_x, rs_y = -ls_x, -ls_y, -rs_x, -rs_y
         lt, rt = gi.getTriggers(gamepad, self._deadzone)
         hat_x, hat_y = gi.getHat(gamepad)
+        l1 = gi.getButtonValue(gamepad, 7)
+        r1 = gi.getButtonValue(gamepad, 8)
+
+
 
         plus, minus, home = gi.getButtonsValues(gamepad, 4, 5, 6)
         y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
@@ -156,6 +160,10 @@ class ControllerManager:
         if self._cruise_vec:
             return self._cruise_vec
         
+        if r1 == 0:
+            return [0.0, 0.0]
+
+
         return move_vec
 
 
