@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from odrive_motor_controller import ODriveMotorController
-from odrive_motor_controller_manager import ODriveMotorControllerManager
+from .odrive_motor_controller import ODriveMotorController
+from .odrive_motor_controller_manager import ODriveMotorControllerManager
 from odrive.enums import AxisState
 from ament_index_python.packages import get_package_share_directory
 
