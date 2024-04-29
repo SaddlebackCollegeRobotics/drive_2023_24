@@ -158,6 +158,7 @@ class ControllerManager:
         if self._cruise_vec:
             return self._cruise_vec
         
+        # Disable movement if right bumper is not pressed
         if r1 == 0:
             return [0.0, 0.0]
 
