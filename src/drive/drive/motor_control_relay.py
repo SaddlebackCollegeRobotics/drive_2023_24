@@ -38,7 +38,7 @@ class MotorControlRelay(Node):
     def control_input_callback(self, msg: Float64MultiArray):
 
         norm_vel_left, norm_vel_right = msg.data[0], msg.data[1]
-        
+
         self._manager['front_left'].set_normalized_velocity(-norm_vel_left)
         self._manager['back_left'].set_normalized_velocity(-norm_vel_left)
         self._manager['front_right'].set_normalized_velocity(norm_vel_right)

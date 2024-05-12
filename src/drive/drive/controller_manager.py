@@ -123,6 +123,7 @@ class ControllerManager:
         hat_x, hat_y = gi.getHat(gamepad)
 
         r1 = gi.getButtonValue(gamepad, 8)
+        l1 = gi.getButtonsValues(gamepad, 7)
 
         plus, minus, home = gi.getButtonsValues(gamepad, 4, 5, 6)
         y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
@@ -144,9 +145,16 @@ class ControllerManager:
             self._cruise_vec = None
             return [0.0, 0.0]
 
-        move_vec = self._scheme(ls_x, ls_y, rs_x, rs_y, lt, rt, hat_x, hat_y, \
+        move_vec = self._scheme(ls_x, ls_y, rs_x, rs_y, lt, rt, hat_x, hat_y, 
                                 a, b, x, y)
         
+        PRECISION_SPEED_FACTOR = 0.5
+
+        # Enables precision mode when left bumper is pressed
+        if l1 == 1:
+           move_vec[0] *= PRECISION_SPEED_FACTOR
+           move_vec[1] *= PRECISION_SPEED_FACTOR
+
         # Cruise control: press home to toggle
         if home:
             if not self._cruise_pressed:
@@ -161,6 +169,7 @@ class ControllerManager:
         # Disable movement if right bumper is not pressed
         if r1 == 0:
             return [0.0, 0.0]
+
 
         return move_vec
 
