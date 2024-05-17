@@ -54,7 +54,7 @@ class MotorControlRelay(Node):
         if fl_est != None:
             self._wheel_estimate_publisher.publish(Float64MultiArray(data=[fl_est[0], 0]))
     
-    def reset_odrives(self):
+    def reset_odrives(self, _msg):
         """Resets the odrives to closed loop control in case of
         a fatal error such as overcurrent.
         """
