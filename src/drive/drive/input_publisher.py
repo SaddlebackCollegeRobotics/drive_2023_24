@@ -28,9 +28,9 @@ class DriveInputPublisher(Node):
 
     def timer_callback(self):
         move_vec = self._controller_manager.handle_input()
-        self.msg.data = move_vec
 
         if isinstance(move_vec, list):
+            self.msg.data = move_vec
             self.control_publisher.publish(self.msg)
         else:
             reset_msg = Bool()
