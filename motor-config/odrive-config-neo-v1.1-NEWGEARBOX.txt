@@ -2,7 +2,7 @@
 # For the NEO V1.1 motor.
 # https://www.revrobotics.com/rev-21-1650/
 
-CAN_NODE_ID = 6
+CAN_NODE_ID = 3
 CAN_BAUD_RATE = 1000000
 ENABLE_BRAKE_RESISTOR = True
 
@@ -55,13 +55,13 @@ odrv.axis0.config.torque_soft_max = 1.25
 odrv.axis0.config.enable_watchdog = True
 odrv.axis0.config.watchdog_timeout = 2
 
-odrv.axis0.config.encoder_bandwidth = 1000 #!!! 100
+odrv.axis0.config.encoder_bandwidth = 100
 odrv.hall_encoder0.config.enabled = True
 odrv.axis0.config.load_encoder = EncoderId.HALL_ENCODER0
 odrv.axis0.config.commutation_encoder = EncoderId.HALL_ENCODER0
 
 # PID Loop
-odrv.axis0.controller.config.vel_gain = 0.04736306518316269
+odrv0.axis0.controller.config.vel_gain = 0.02
 odrv.axis0.controller.config.vel_integrator_gain = 0.5 * 10 * odrv.axis0.controller.config.vel_gain
 # The '10' above being in Hz from encoder_bandwidth (1/100ms = 1/0.1s = 10Hz)
 
