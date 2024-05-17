@@ -121,7 +121,7 @@ class ControllerManager:
         hat_x, hat_y = gi.getHat(gamepad)
 
         r1 = gi.getButtonValue(gamepad, 8)
-        l1 = gi.getButtonsValues(gamepad, 7)
+        l1 = gi.getButtonsValue(gamepad, 7)
 
         plus, minus, home = gi.getButtonsValues(gamepad, 4, 5, 6)
         y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
