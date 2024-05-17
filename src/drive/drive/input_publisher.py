@@ -3,7 +3,7 @@ import math
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Bool
 
 from .controller_manager import ControllerScheme, ControllerManager
 
@@ -19,6 +19,7 @@ class DriveInputPublisher(Node):
         self.PUBLISHER_PERIOD = 1/10 # seconds
 
         self.control_publisher = self.create_publisher(Float64MultiArray, '/drive/control_input', 10)
+        self.reset_publisher = self.create_publisher(Bool, '/drive/should_reset', 10)
         self.msg = Float64MultiArray()
 
         self._controller_manager = ControllerManager(ControllerScheme.TRIGGER_BASED)
@@ -26,11 +27,14 @@ class DriveInputPublisher(Node):
         self.timer = self.create_timer(self.PUBLISHER_PERIOD, self.timer_callback)
 
     def timer_callback(self):
-        
         move_vec = self._controller_manager.handle_input()
-
         self.msg.data = move_vec
-        self.control_publisher.publish(self.msg)
+
+        if isinstance(move_vec, list):
+            self.control_publisher.publish(self.msg)
+        else:
+            reset_msg = Bool()
+            self.reset_publisher.publish(reset_msg)
 
 
 def main(args=None):

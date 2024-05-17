@@ -86,8 +86,7 @@ class ControllerManager:
     _gamepad_index: int
     _deadzone: float
 
-    _stopped: bool
-    _stop_pressed: bool
+    _is_resetting: bool
     _cruise_vec: (float, float)
     _cruise_pressed: bool
 
@@ -102,12 +101,11 @@ class ControllerManager:
         self._gamepad_index = gamepad_index
         self._deadzone = deadzone
 
-        self._stopped = False
-        self._stop_pressed = False
+        self._is_resetting = False
         self._cruise_vec = None
         self._cruise_pressed = False
 
-    def handle_input(self) -> list[float]:
+    def handle_input(self) -> list[float] | bool:
         # Reinitialize gamepad each call to handle new connections
         gamepad = gi.getGamepad(self._gamepad_index)
 
@@ -135,15 +133,11 @@ class ControllerManager:
 
         # Emergency stop: press plus + minus to toggle
         if plus and minus:
-            if not self._stop_pressed:
-                self._stopped = not self._stopped
-                self._stop_pressed = True
-        elif self._stop_pressed:
-            self._stop_pressed = False
-        
-        if self._stopped:
-            self._cruise_vec = None
-            return [0.0, 0.0]
+            if not self._is_resetting:
+                self._is_resetting = True
+                return False
+        elif self._is_resetting:
+            self._is_resetting = False
 
         move_vec = self._scheme(ls_x, ls_y, rs_x, rs_y, lt, rt, hat_x, hat_y, 
                                 a, b, x, y)
