@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Bool
 
 from .odrive_motor_controller import ODriveMotorController
 from .odrive_motor_controller_manager import ODriveMotorControllerManager
@@ -15,6 +15,7 @@ class MotorControlRelay(Node):
         super().__init__('motor_control_relay')
 
         self._control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
+        self._should_reset_subscriber = self.create_subscription(Bool, '/drive/should_reset', self.reset_odrives, 10)
         self._wheel_estimate_publisher = self.create_publisher(Float64MultiArray, '/drive/wheel_velocity_estimates', 10)
 
         # Set up motor controller intefaces
@@ -52,6 +53,14 @@ class MotorControlRelay(Node):
 
         if fl_est != None:
             self._wheel_estimate_publisher.publish(Float64MultiArray(data=[fl_est[0], 0]))
+    
+    def reset_odrives(self):
+        """Resets the odrives to closed loop control in case of
+        a fatal error such as overcurrent.
+        """
+
+        self._manager.for_each(ODriveMotorController.clear_errors)
+        self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
 
 
 def main(args=None):
