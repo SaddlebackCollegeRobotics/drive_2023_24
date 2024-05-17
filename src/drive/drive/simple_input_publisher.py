@@ -38,9 +38,10 @@ class InputPublisher(Node):
 
             (ls_x, ls_y) = gmi.getLeftStick(gamepad, self.AXIS_DEADZONE)
             (rs_x, rs_y) = gmi.getRightStick(gamepad, self.AXIS_DEADZONE)
-            
-            # Left vel, right vel
-            self.msg.data = [float(ls_y, rs_y)]
+
+             # Left y-coord, right y-coord, enable_precision_mode
+            self.msg.data = [float(ls_y), float(rs_y)]
+
         else:
             self.msg.data = [0.0, 0.0]
 
