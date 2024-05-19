@@ -20,7 +20,7 @@ class MotorControlRelay(Node):
 
         # Set up motor controller intefaces
 
-        self._max_speed = 30
+        self._max_speed = 80
 
         can_enpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
 
@@ -59,6 +59,7 @@ class MotorControlRelay(Node):
         a fatal error such as overcurrent.
         """
 
+        print("Resetting odrives...")
         self._manager.for_each(ODriveMotorController.clear_errors)
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
 

@@ -121,7 +121,7 @@ class ControllerManager:
         hat_x, hat_y = gi.getHat(gamepad)
 
         r1 = gi.getButtonValue(gamepad, 8)
-        l1 = gi.getButtonsValue(gamepad, 7)
+        l1 = gi.getButtonValue(gamepad, 7)
 
         plus, minus, home = gi.getButtonsValues(gamepad, 4, 5, 6)
         y, x, a, b = gi.getButtonsValues(gamepad, 0, 1, 2, 3)
@@ -146,6 +146,7 @@ class ControllerManager:
 
         # Enables precision mode when left bumper is pressed
         if l1 == 1:
+           print("Precision mode enabled...")
            move_vec[0] *= PRECISION_SPEED_FACTOR
            move_vec[1] *= PRECISION_SPEED_FACTOR
 
