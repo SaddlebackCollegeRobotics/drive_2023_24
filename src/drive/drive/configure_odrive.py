@@ -10,6 +10,22 @@ class MinimalPublisher(Node):
 
     def __init__(self, cmd_args):
 
+        self._odrive_manager = ODriveMotorControllerManager(
+            'can0', 
+            get_package_share_directory('drive') + '/flat_endpoints.json',
+            1000000)
+        
+        self._max_speed = 0
+
+        self._odrive_manager.add_motor_controller('front_left', 0, self._max_speed)
+        self._odrive_manager.add_motor_controller('back_left', 1, self._max_speed)
+        self._odrive_manager.add_motor_controller('back_right', 2, self._max_speed)
+        self._odrive_manager.add_motor_controller('front_right', 3, self._max_speed)
+
+        if len(cmd_args) == 2:
+            # Obtain and print ODrive errors
+            print("Errors: ", self._odrive_manager.for_each(ODriveMotorController.get_errors))
+
         if len(cmd_args) != 5:
             print("Usage: configure_odrive <all/node_name> <path> <datatype> <value>")
             sys.exit(1)
@@ -19,17 +35,6 @@ class MinimalPublisher(Node):
 
         # Set up motor controllers ---------------------------------------
 
-        self._max_speed = 0
-
-        self._odrive_manager = ODriveMotorControllerManager(
-            'can0', 
-            get_package_share_directory('arm') + '/flat_endpoints.json',
-            1000000)
-        
-        self._odrive_manager.add_motor_controller('front_left', 0, self._max_speed)
-        self._odrive_manager.add_motor_controller('back_left', 1, self._max_speed)
-        self._odrive_manager.add_motor_controller('back_right', 2, self._max_speed)
-        self._odrive_manager.add_motor_controller('front_right', 3, self._max_speed)
 
         choice = cmd_args[1]
         path = cmd_args[2]
