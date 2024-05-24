@@ -32,7 +32,7 @@ class ODriveMotorControllerManager:
 
     def add_motor_controller(self, name: str, node_id: int, max_speed: float) -> None:
         if name not in self._motor_controllers:
-            self._motor_controllers[name] = ODriveMotorController(self._can_interface, node_id, max_speed)
+            self._motor_controllers[name] = ODriveMotorController(self._can_interface, name, node_id, max_speed)
         else:
             raise Exception(f"Motor controller with name {name} already exists")
         
@@ -77,3 +77,17 @@ class ODriveMotorControllerManager:
         """
         return self.count()
     
+    def get_all_odrive_status(self) -> str:
+
+        output = ""
+
+        for motor_controller in self._motor_controllers.values():
+
+            name = motor_controller.get_name()
+            active_errors, disarm_reason = motor_controller.get_errors()
+
+            output += name + ',' \
+                + active_errors.__str__().removeprefix('ODriveError.') + ',' \
+                + disarm_reason.__str__().removeprefix('ODriveError.') + '\n'
+        
+        return output

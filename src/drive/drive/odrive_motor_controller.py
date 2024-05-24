@@ -10,8 +10,9 @@ class ODriveMotorController():
     _node_id: int
     _max_speed: float
     _input_vel: float
+    _name: str
     
-    def __init__(self, can_interface: ODriveCanInterface, node_id: int, max_speed: float) -> None:
+    def __init__(self, can_interface: ODriveCanInterface, name: str, node_id: int, max_speed: float) -> None:
         """Class to manage individual ODrive based motor contollers.
 
         Args:
@@ -21,6 +22,7 @@ class ODriveMotorController():
                 May also be accessed with the `max_speed` property.
         """
         self._can_interface = can_interface
+        self._name = name
         self._node_id = node_id
         self._max_speed = max_speed
         self._input_vel = 0.0
@@ -140,3 +142,6 @@ class ODriveMotorController():
 
     def read_param(self, path: str):
         return self._can_interface.read_param(self._node_id, path)
+    
+    def get_name(self):
+        return self._name

@@ -1,11 +1,13 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray, Bool
+from std_msgs.msg import Float64MultiArray, Empty as EmptyMsg, String
+from std_srvs.srv import Empty as EmptySrv
 
 from .odrive_motor_controller import ODriveMotorController
 from .odrive_motor_controller_manager import ODriveMotorControllerManager
 from odrive.enums import AxisState
 from ament_index_python.packages import get_package_share_directory
+from time import time
 
 
 class MotorControlRelay(Node):
@@ -15,53 +17,77 @@ class MotorControlRelay(Node):
         super().__init__('motor_control_relay')
 
         self._control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
-        self._should_reset_subscriber = self.create_subscription(Bool, '/drive/should_reset', self.reset_odrives, 10)
-        self._wheel_estimate_publisher = self.create_publisher(Float64MultiArray, '/drive/wheel_velocity_estimates', 10)
-
-        # Set up motor controller intefaces
-
-        self._max_speed = 80
-
-        can_enpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
-
-        self._manager = ODriveMotorControllerManager('can0', can_enpoints_file, 1000000)
+        self._heartbeat_subscriber = self.create_subscription(EmptyMsg, '/system/heartbeat', self.reset_heartbeat, 10)
         
-        self._manager.add_motor_controller('front_left', 0, self._max_speed)
-        self._manager.add_motor_controller('back_left', 1, self._max_speed)
-        self._manager.add_motor_controller('back_right', 2, self._max_speed)
-        self._manager.add_motor_controller('front_right', 3, self._max_speed)
+        self._status_publisher = self.create_publisher(String, '/drive/status', 10)
+
+        self.reset_odrives_srv = self.create_service(EmptySrv, '/drive/reset_odrives', self.reset_odrives)
+
+        self.MAX_SPEED = 80
+
+        can_endpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
+
+        self._manager = ODriveMotorControllerManager('can0', can_endpoints_file, 1000000)
         
+        self._manager.add_motor_controller('front_left', 0, self.MAX_SPEED)
+        self._manager.add_motor_controller('back_left', 1, self.MAX_SPEED)
+        self._manager.add_motor_controller('back_right', 2, self.MAX_SPEED)
+        self._manager.add_motor_controller('front_right', 3, self.MAX_SPEED)
+
+        # Listen and react to system heartbeat ----------------------
+        self.HEARTBEAT_TIMEOUT = 2.0
+        self.HEARTBEAT_CHECK_PERIOD = 0.5
+
+        self.last_heartbeat_time = 0
+        self.is_heartbeat_active = False
+        self.heartbeat_check_ = self.create_timer(self.HEARTBEAT_CHECK_PERIOD, self.check_heartbeat)
+
+        # Feed the motor controller watchdogs -----------------------
+        self.WATCHDOG_FEED_PERIOD = 0.5
+        self.watchdog_feed_timer = self.create_timer(self.WATCHDOG_FEED_PERIOD, self.feed_watchdogs)
+        
+        # Drive system status ---------------------------------------
+        self.DRIVE_STATUS_PERIOD = 5
+        self.drive_status_timer = self.create_timer(self.DRIVE_STATUS_PERIOD, self.publish_drive_status)
+        self.drive_status_msg = String()
+
         # Set all motor controllers to closed loop control
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
-        self.VELOCITY_ESTIMATE_PERIOD = 1/20
-        # self.timer = self.create_timer(self.VELOCITY_ESTIMATE_PERIOD, self.velocity_estimate_callback)
 
     def control_input_callback(self, msg: Float64MultiArray):
 
-        norm_vel_left, norm_vel_right = msg.data[0], msg.data[1]
+        if (self.is_heartbeat_active):
 
-        self._manager['front_left'].set_normalized_velocity(-norm_vel_left)
-        self._manager['back_left'].set_normalized_velocity(-norm_vel_left)
-        self._manager['front_right'].set_normalized_velocity(norm_vel_right)
-        self._manager['back_right'].set_normalized_velocity(norm_vel_right)
+            norm_vel_left, norm_vel_right = msg.data[0], msg.data[1]
 
-    def velocity_estimate_callback(self):
-        fl_est = self._manager['front_left'].get_encoder_estimates()
-        # bl_est = self._manager['back_left'].get_encoder_estimates()
-        # fr_est = self._manager['front_right'].get_encoder_estimates()
-        # br_est= self._manager['back_right'].get_encoder_estimates()
+            self._manager['front_left'].set_normalized_velocity(-norm_vel_left)
+            self._manager['back_left'].set_normalized_velocity(-norm_vel_left)
+            self._manager['front_right'].set_normalized_velocity(norm_vel_right)
+            self._manager['back_right'].set_normalized_velocity(norm_vel_right)
 
-        if fl_est != None:
-            self._wheel_estimate_publisher.publish(Float64MultiArray(data=[fl_est[0], 0]))
-    
-    def reset_odrives(self, _msg):
+    def reset_odrives(self, msg):
         """Resets the odrives to closed loop control in case of
-        a fatal error such as overcurrent.
+        a fatal error such as over-current.
         """
-
-        print("Resetting odrives...")
         self._manager.for_each(ODriveMotorController.clear_errors)
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
+
+    def reset_heartbeat(self, msg):
+        self.last_heartbeat_time = time()
+
+    def check_heartbeat(self):
+        
+        self.is_heartbeat_active = time() - self.last_heartbeat_time < self.HEARTBEAT_TIMEOUT
+        
+        if (self.is_heartbeat_active == False):
+            self._manager.for_each(ODriveMotorController.set_normalized_velocity, 0.0)
+
+    def feed_watchdogs(self):
+        self._manager.for_each(ODriveMotorController.feed_watchdog)
+
+    def publish_drive_status(self):
+        self.drive_status_msg = self._manager.get_all_odrive_status()
+        self._status_publisher.publish(self.drive_status_msg)
 
 
 def main(args=None):
