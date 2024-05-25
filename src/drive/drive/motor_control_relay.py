@@ -14,25 +14,12 @@ class MotorControlRelay(Node):
 
     def __init__(self):
 
-        super().__init__('motor_control_relay')
+        super().__init__('drive/motor_control_relay')
 
         self._control_input_subscriber = self.create_subscription(Float64MultiArray, '/drive/control_input', self.control_input_callback, 10)
         self._heartbeat_subscriber = self.create_subscription(EmptyMsg, '/system/heartbeat', self.reset_heartbeat, 10)
-        
         self._status_publisher = self.create_publisher(String, '/drive/status', 10)
-
         self.reset_odrives_srv = self.create_service(EmptySrv, '/drive/reset_odrives', self.reset_odrives)
-
-        self.MAX_SPEED = 80
-
-        can_endpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
-
-        self._manager = ODriveMotorControllerManager('can0', can_endpoints_file, 1000000)
-        
-        self._manager.add_motor_controller('front_left', 0, self.MAX_SPEED)
-        self._manager.add_motor_controller('back_left', 1, self.MAX_SPEED)
-        self._manager.add_motor_controller('back_right', 2, self.MAX_SPEED)
-        self._manager.add_motor_controller('front_right', 3, self.MAX_SPEED)
 
         # Listen and react to system heartbeat ----------------------
         self.HEARTBEAT_TIMEOUT = 2.0
@@ -50,6 +37,19 @@ class MotorControlRelay(Node):
         self.DRIVE_STATUS_PERIOD = 5
         self.drive_status_timer = self.create_timer(self.DRIVE_STATUS_PERIOD, self.publish_drive_status)
         self.drive_status_msg = String()
+
+        # Set up motor controllers ---------------------------------------
+
+        self.MAX_SPEED = 80
+
+        can_endpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
+
+        self._manager = ODriveMotorControllerManager('can0', can_endpoints_file, 1000000)
+        
+        self._manager.add_motor_controller('front_left', 0, self.MAX_SPEED)
+        self._manager.add_motor_controller('back_left', 1, self.MAX_SPEED)
+        self._manager.add_motor_controller('back_right', 2, self.MAX_SPEED)
+        self._manager.add_motor_controller('front_right', 3, self.MAX_SPEED)
 
         # Set all motor controllers to closed loop control
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
