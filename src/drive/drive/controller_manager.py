@@ -131,7 +131,7 @@ class ControllerManager:
             print([i for i,b in \
                enumerate(gi.getButtonsValues(gamepad, *range(0, 18))) if b])
 
-        # Emergency stop: press plus + minus to toggle
+        # Reset drive system
         if plus and minus:
             if not self._is_resetting:
                 self._is_resetting = True
