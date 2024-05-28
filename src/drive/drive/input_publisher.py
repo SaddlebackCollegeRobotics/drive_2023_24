@@ -15,7 +15,7 @@ class DriveInputPublisher(Node):
     def __init__(self):
 
         # Give the node a name.
-        super().__init__('drive/input_publisher')
+        super().__init__('drive_input_publisher')
 
         self.PUBLISHER_PERIOD = 1/10 # seconds
 
@@ -45,9 +45,10 @@ class DriveInputPublisher(Node):
             return
         
         self.future = self.reset_drive_cli.call_async(self.reset_drive_request)
-        rclpy.spin_until_future_complete(self, self.future)
+        self.future.add_done_callback(self.reset_drive_callback)        
         
-        if (self.future.result() != None):
+    def reset_drive_callback(self, future):
+        if (future.result() != None):
             print("Successfully reset drive system!")
         else:
             print("Warning: Failed to reset drive system!")
