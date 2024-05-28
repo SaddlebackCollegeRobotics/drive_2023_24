@@ -88,7 +88,7 @@ class MotorControlRelay(Node):
         self._manager.for_each(ODriveMotorController.feed_watchdog)
 
     def publish_drive_status(self):
-        self.drive_status_msg = self._manager.get_all_odrive_status()
+        self.drive_status_msg.data = self._manager.get_all_odrive_status()
         self._status_publisher.publish(self.drive_status_msg)
 
 
