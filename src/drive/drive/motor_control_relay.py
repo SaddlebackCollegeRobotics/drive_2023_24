@@ -81,8 +81,6 @@ class MotorControlRelay(Node):
         
         self.is_heartbeat_active = time() - self.last_heartbeat_time < self.HEARTBEAT_TIMEOUT
         
-        print(self.is_heartbeat_active)
-
         if (self.is_heartbeat_active == False):
             self._manager.for_each(ODriveMotorController.set_normalized_velocity, 0.0)
 
