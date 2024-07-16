@@ -6,6 +6,7 @@
   <description>Saddleback College URC drive system</description>
   <maintainer email="supernovawarriors128@gmail.com">cameron</maintainer>
   <author>Matthew Reese</author>
+  <author>Ryan Dewey</author>
   <license>Apache License 2.0</license>
 
   <!-- Dependencies for node import statements -->
