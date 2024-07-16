@@ -53,7 +53,8 @@
         "uncrustify",
         "Wextra",
         "Wpedantic",
-        "xmllint"
+        "xmllint",
+        "odrive"
     ],
     "cSpell.allowCompoundWords": true,
     "cSpell.ignorePaths": [

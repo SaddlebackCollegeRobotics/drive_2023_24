@@ -11,7 +11,7 @@ class ODriveMotorController():
     _max_speed: float
     _input_vel: float
     _name: str
-    
+
     def __init__(self, can_interface: ODriveCanInterface, name: str, node_id: int, max_speed: float) -> None:
         """Class to manage individual ODrive based motor contollers.
 
@@ -62,8 +62,8 @@ class ODriveMotorController():
         """Sets the axis state of the motor.
 
         After access state setter is called, this method will await the next `heartbeat` message
-        from the motor. Based on this response, the operation will be deemed 
-        successful/unsucessful. Currently, this result is only logged to stdout.
+        from the motor. Based on this response, the operation will be deemed
+        successful/unsuccessful. Currently, this result is only logged to stdout.
 
         Args:
             axis_state (AxisState): Axis state to set the ODrive to.
@@ -90,11 +90,11 @@ class ODriveMotorController():
             if result == ProcedureResult.SUCCESS:
                 # logger.debug(f"Axis state set successfully {new_axis_state.name}")
                 return
-            
+
         # Get disarm reason
         # logger.error(f"Axis state set failed: {AxisError(error).name}")
         # logger.error(f"Current axis state: {new_axis_state.name}")
-    
+
     def get_errors(self) -> tuple[ODriveError, ODriveError]:
         """Get ODrive errors.
 
@@ -107,12 +107,12 @@ class ODriveMotorController():
         )
 
         return errs
-    
+
     def clear_errors(self) -> None:
         """Clear ODrive errors.
         """
         self._can_interface.send_function_call(self._node_id, 'clear_errors')
-    
+
     def feed_watchdog(self) -> None:
         """Feed watchdog.
         """
@@ -136,12 +136,12 @@ class ODriveMotorController():
 
     def get_encoder_estimates(self):
         return self._can_interface.get_encoder_estimates(self._node_id)
-    
+
     def write_param(self, path: str, value: Any):
         self._can_interface.write_param(self._node_id, path, value)
 
     def read_param(self, path: str):
         return self._can_interface.read_param(self._node_id, path)
-    
+
     def get_name(self):
         return self._name

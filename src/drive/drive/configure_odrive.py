@@ -11,10 +11,10 @@ class MinimalPublisher(Node):
     def __init__(self, cmd_args):
 
         self._odrive_manager = ODriveMotorControllerManager(
-            'can0', 
+            'can0',
             get_package_share_directory('drive') + '/flat_endpoints.json',
             1000000)
-        
+
         self._max_speed = 0
 
         self._odrive_manager.add_motor_controller('front_left', 0, self._max_speed)
@@ -55,25 +55,25 @@ class MinimalPublisher(Node):
                 sys.exit(1)
 
         print(f'choice: {choice}, path: {path}, datatype: {data_type}, value: {value}')
-        
+
 
         if choice == 'all':
 
             # Write param values
-            self._odrive_manager.for_each(ODriveMotorController.write_param, 
+            self._odrive_manager.for_each(ODriveMotorController.write_param,
                                             path, value)
-            
+
             # # Read back param values
             # self._odrive_manager.for_each(ODriveMotorController.read_param, path)
             # name_list = self._odrive_manager._motor_controllers.keys()
 
             # for name, param in zip(name_list, param_list):
             #     print(f"{name} | {path} = {param}")
-                
-            
+
+
             # print(f'choice: {choice}, path: {path}, datatype: {data_type}, value: {value}')
         elif choice in self._odrive_manager._motor_controllers:
-        
+
             # Set param value
             self._odrive_manager.get_motor_controller(choice).write_param(path, value)
 
@@ -89,9 +89,9 @@ class MinimalPublisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    
+
     minimal_publisher = MinimalPublisher(sys.argv)
-    
+
     try:
         rclpy.spin(minimal_publisher)
     except Exception as e:

@@ -21,7 +21,7 @@ class DriveInputPublisher(Node):
 
         self.control_publisher = self.create_publisher(Float64MultiArray, '/drive/control_input', 10)
         self.reset_drive_cli = self.create_client(Empty, '/drive/reset_system')
-        
+
         self.msg = Float64MultiArray()
         self.reset_drive_request = Empty.Request()
 
@@ -39,14 +39,14 @@ class DriveInputPublisher(Node):
             self.reset_drive()
 
     def reset_drive(self):
-        
-        if (self.reset_drive_cli.service_is_ready() == False):
+
+        if (self.reset_drive_cli.service_is_ready() is False):
             print("Warning: Drive reset service is unavailable!")
             return
-        
+
         self.future = self.reset_drive_cli.call_async(self.reset_drive_request)
-        self.future.add_done_callback(self.reset_drive_callback)        
-        
+        self.future.add_done_callback(self.reset_drive_callback)
+
     def reset_drive_callback(self, future):
         if (future.result() != None):
             print("Successfully reset drive system!")

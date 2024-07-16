@@ -51,8 +51,8 @@ class ODriveCanInterface():
                     'float': 'f'
                 }
         except FileNotFoundError:
-            print(f"Enpoint lookup file {endpoint_lookup_file} not found")
-            exit(0)
+            print(f"Endpoint lookup file {endpoint_lookup_file} not found")
+            exit(1)
 
     def __del__(self) -> None:
         if self.bus != None:

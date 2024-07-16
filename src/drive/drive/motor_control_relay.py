@@ -32,7 +32,7 @@ class MotorControlRelay(Node):
         # Feed the motor controller watchdogs -----------------------
         self.WATCHDOG_FEED_PERIOD = 0.5
         self.watchdog_feed_timer = self.create_timer(self.WATCHDOG_FEED_PERIOD, self.feed_watchdogs)
-        
+
         # Drive system status ---------------------------------------
         self.DRIVE_STATUS_PERIOD = 5
         self.drive_status_timer = self.create_timer(self.DRIVE_STATUS_PERIOD, self.publish_drive_status)
@@ -45,7 +45,7 @@ class MotorControlRelay(Node):
         can_endpoints_file = get_package_share_directory('drive') + '/flat_endpoints.json'
 
         self._manager = ODriveMotorControllerManager('can0', can_endpoints_file, 1000000)
-        
+
         self._manager.add_motor_controller('front_left', 0, self.MAX_SPEED)
         self._manager.add_motor_controller('back_left', 1, self.MAX_SPEED)
         self._manager.add_motor_controller('back_right', 2, self.MAX_SPEED)
@@ -54,7 +54,7 @@ class MotorControlRelay(Node):
         # Set all motor controllers to closed loop control
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
 
-    def control_input_callback(self, msg: Float64MultiArray):
+    def control_input_callback(self, msg: Float64MultiArray) -> None:
 
         if (self.is_heartbeat_active):
 
@@ -71,16 +71,16 @@ class MotorControlRelay(Node):
         """
         self._manager.for_each(ODriveMotorController.clear_errors)
         self._manager.for_each(ODriveMotorController.set_axis_state, AxisState.CLOSED_LOOP_CONTROL)
-        
+
         return response
 
     def reset_heartbeat(self, msg):
         self.last_heartbeat_time = time()
 
     def check_heartbeat(self):
-        
+
         self.is_heartbeat_active = time() - self.last_heartbeat_time < self.HEARTBEAT_TIMEOUT
-        
+
         if (self.is_heartbeat_active == False):
             self._manager.for_each(ODriveMotorController.set_normalized_velocity, 0.0)
 
