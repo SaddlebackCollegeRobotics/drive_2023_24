@@ -29,7 +29,7 @@ setup(
     zip_safe=True,
     maintainer='cameron',
     maintainer_email='supernovawarriors128@gmail.com',
-    description='Examples of minimal publisher/subscriber using rclpy',
+    description='Saddleback College URC drive system',
     license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={

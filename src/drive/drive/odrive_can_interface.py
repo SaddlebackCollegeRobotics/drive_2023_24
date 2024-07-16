@@ -26,12 +26,12 @@ class ODriveCanInterface():
     def __init__(self, interface: str = 'can0',
                 endpoint_lookup_file: str = 'flat_endpoints.json',
                 bitrate: int = 1000000) -> None:
-        
+
         self.bus = None
 
-        try: 
+        try:
             with open(endpoint_lookup_file, 'r') as endpoints_file:
-                
+
                 self.endpoint_data = json.load(endpoints_file)
                 self.endpoints = self.endpoint_data['endpoints']
 
@@ -53,14 +53,14 @@ class ODriveCanInterface():
         except FileNotFoundError:
             print(f"Enpoint lookup file {endpoint_lookup_file} not found")
             exit(0)
-        
+
     def __del__(self) -> None:
         if self.bus != None:
             self.bus.shutdown()
-    
+
     def _configure_bus_network(self, interface_name: str, bitrate: int):
         interface = ifcfg.interfaces().get(interface_name)
-    
+
         if interface is None:
             print(f'Interface {interface_name} not found')
             exit(0)
@@ -68,11 +68,11 @@ class ODriveCanInterface():
         if 'UP' in interface.get('flags'):
             print(f'Interface {interface_name} is already up')
         else:
-            
+
             subprocess.run(["sudo", "ip", "link", "set",
                             interface_name, "up", "type", "can",
                             "bitrate", str(bitrate)])
-            
+
             print(f'Started interface {interface_name}')
 
     def flush_rx_buffer(self) -> None:
@@ -103,16 +103,16 @@ class ODriveCanInterface():
         initial_time = time()
         for msg in self.bus: # FIXME: Improper check for timeout
             if msg.arbitration_id == (node_id << 5 | command_id):
-                return msg 
+                return msg
             if time() - initial_time > timeout:
                 # logger.error(f"Timeout waiting for CAN reply for command {ODriveCanInterface.COMMAND(command_id).name}")
                 return None
 
     def send_can_message(self, node_id: int, command_id: "ODriveCanInterface.COMMAND", input_types: str = "", *input_data: Any) -> None:
-        
+
         # TODO - Put this on separate thread loop rather than in this func
         self.flush_rx_buffer()
-        
+
         self.bus.send(can.Message(
                 arbitration_id = (node_id << 5 | command_id),
                 data = struct.pack(input_types, *input_data) if input_types else b'',
@@ -124,7 +124,7 @@ class ODriveCanInterface():
         endpoint_type = self.endpoints[path]['type']
 
         return endpoint_id, endpoint_type
-    
+
     def write_param(self, node_id: int, path: str, value: Any) -> None:
         endpoint_id, endpoint_type = self._get_endpoint_info(path)
 
@@ -142,7 +142,7 @@ class ODriveCanInterface():
         _, _, _, return_value = self._unpack_can_reply('<BHB' + self.format_lookup[endpoint_type], msg)
 
         return return_value
-    
+
     def send_function_call(self, node_id, path: str, inputs: tuple = None, outputs: tuple = None):
         endpoint_id, _ = self._get_endpoint_info(path)
         self.send_can_message(node_id, ODriveCanInterface.COMMAND.RX_SDO, '<BHB', self.ACCESS_MODE.OPCODE_WRITE, endpoint_id, 0)
@@ -163,7 +163,7 @@ class ODriveCanInterface():
         error, state, result, traj_done = self._unpack_can_reply('<IBBB', msg)
 
         return error, state, result, traj_done
-    
+
     def get_encoder_estimates(self, node_id: int) -> tuple[float, float]:
         """Get ODrive encoder position and velocity estimates.
 
